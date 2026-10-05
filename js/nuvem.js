@@ -117,6 +117,7 @@
   // ── Tela de acesso ───────────────────────────────────────────────────────
 
   let tela = null;
+  let erroEnvio = null; // o e-mail de confirmação do cadastro não saiu: a tela de confirmar mostra o motivo
 
   function mostrar(...conteudo) {
     const app = document.getElementById('app');
@@ -229,7 +230,7 @@
           await ocupado(botao, criar ? 'Criando a conta…' : 'Entrando…', async () => {
             try {
               const cred = criar ? await auth.createUserWithEmailAndPassword(e, s) : await auth.signInWithEmailAndPassword(e, s);
-              if (criar) { try { await enviarConfirmacao(cred.user); } catch (_) { /* a próxima tela oferece mandar de novo */ } }
+              if (criar) { try { await enviarConfirmacao(cred.user); } catch (x) { erroEnvio = x; } }
               resolve(cred.user);
             } catch (x) { aviso.mostrar(mensagemErro(x)); }
           });
@@ -304,6 +305,11 @@
       const aoVoltar = () => { if (document.visibilityState === 'visible') conferir(false); };
       document.addEventListener('visibilitychange', aoVoltar);
       const relogio = setInterval(() => conferir(false), 6000);
+      if (erroEnvio) {
+        const x = erroEnvio;
+        erroEnvio = null;
+        setTimeout(() => aviso.mostrar(`O e-mail de confirmação não foi enviado: ${mensagemErro(x)}`));
+      }
 
       const confirmei = LC.el('button', { type: 'button', class: 'botao botao-primario acesso-botao' }, 'Já confirmei');
       confirmei.addEventListener('click', () => ocupado(confirmei, 'Conferindo…', () => conferir(true)));
