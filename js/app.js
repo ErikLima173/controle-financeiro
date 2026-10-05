@@ -416,6 +416,8 @@
     const pendentes = est.lancamentos.some((t) => D.mes(t.data) === mesAtual && t.situacao === 'pendente' && (f.pessoa === 'todas' || t.pessoa === f.pessoa));
     const anoAtual = mesAtual.slice(0, 4);
     const guardado = LC.arred(D.meses(`${anoAtual}-01`, mesAtual).reduce((s, m) => s + Dd.resumoMes(est, m, f.pessoa).restante, 0));
+    const saldos = Dd.saldosPessoas(est, hoje()); // saldo de hoje: saldo inicial + o que entrou − o que saiu (pagos)
+    const saldoTotal = LC.arred(est.pessoas.filter((p) => f.pessoa === 'todas' || p.id === f.pessoa).reduce((s, p) => s + (saldos.get(p.id) || 0), 0));
     const lista = el('ul', { class: 'heroi-contas' });
     for (const x of Dd.resumoMes(est, mesAtual).pessoas) {
       const ativa = f.pessoa === x.pessoa.id;
@@ -431,7 +433,9 @@
         el('span', { class: 'heroi-conta-valor' + (x.restante < 0 ? ' negativo' : ''), text: fmt.moeda(x.restante) })),
       el('span', { class: 'heroi-conta-uso' },
         medidor(uso, classeUso(uso), `Quanto ${x.pessoa.nome} gastou do que recebeu`),
-        el('span', { class: 'apagado', text: x.receitas ? `gastou ${fmt.pct(x.despesas / x.receitas)} do que recebeu` : x.despesas ? `gastou ${fmt.moeda(x.despesas)} sem recebimento lançado` : 'nada lançado no mês' })))));
+        el('span', { class: 'apagado', text: x.receitas ? `gastou ${fmt.pct(x.despesas / x.receitas)} do que recebeu` : x.despesas ? `gastou ${fmt.moeda(x.despesas)} sem recebimento lançado` : 'nada lançado no mês' })),
+      el('span', { class: 'heroi-conta-saldo' }, 'Saldo hoje ',
+        el('strong', { class: (saldos.get(x.pessoa.id) || 0) < 0 ? 'negativo' : '', text: fmt.moeda(saldos.get(x.pessoa.id) || 0) })))));
     }
     const nomePessoa = f.pessoa !== 'todas' ? est.pessoas.find((p) => p.id === f.pessoa)?.nome : null;
     topo.append(el('section', { class: 'cartao heroi', 'aria-labelledby': 'heroi-rotulo' },
@@ -440,7 +444,9 @@
       el('p', { class: 'heroi-previsto' }, 'Recebido ', el('strong', { text: fmt.moeda(r.receitas) }), ' · gasto ', el('strong', { text: fmt.moeda(r.despesas) }),
         pendentes ? el('span', { class: 'apagado', text: ' · contando o que está agendado' }) : null),
       lista,
-      el('p', { class: 'heroi-guardado' }, `Guardado em ${anoAtual} até agora: `, el('strong', { class: guardado < 0 ? 'negativo' : '', text: fmt.moeda(guardado) }))));
+      el('p', { class: 'heroi-guardado' },
+        nomePessoa ? `Saldo de ${nomePessoa} hoje: ` : 'Saldo de todos hoje: ', el('strong', { class: saldoTotal < 0 ? 'negativo' : '', text: fmt.moeda(saldoTotal) }),
+        el('br'), `Guardado em ${anoAtual} até agora: `, el('strong', { class: guardado < 0 ? 'negativo' : '', text: fmt.moeda(guardado) }))));
 
     // Indicadores do período
     const atual = Dd.totais(Dd.filtrar(est, f));
