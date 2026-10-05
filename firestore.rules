@@ -1,0 +1,55 @@
+rules_version = '2';
+
+// Regras do Livro-Caixa no Cloud Firestore.
+// Cole este arquivo inteiro no Firebase: Firestore Database → Regras → Publicar.
+//
+//   livros/{id}          quem usa: { nome, emails: [...], criadoPor, criadoEm }
+//   livros/{id}/...      o livro-caixa: configuração e um documento por mês
+//
+// Só lê e grava quem entrou com um e-mail confirmado que está na lista "emails" do livro-caixa.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function logado() {
+      return request.auth != null
+        && request.auth.token.email is string
+        && request.auth.token.email_verified == true;
+    }
+
+    function meuEmail() {
+      return request.auth.token.email.lower();
+    }
+
+    function listaValida(emails) {
+      return emails is list && emails.size() >= 1 && emails.size() <= 10;
+    }
+
+    // Quem pode criar um livro-caixa novo. Para só certas pessoas, troque a linha do return por:
+    //   return meuEmail() in ['voce@gmail.com', 'outra.pessoa@gmail.com'];
+    function podeCriar() {
+      return true;
+    }
+
+    match /livros/{livro} {
+      allow read: if logado() && meuEmail() in resource.data.emails;
+
+      allow create: if logado() && podeCriar()
+        && listaValida(request.resource.data.emails)
+        && meuEmail() in request.resource.data.emails
+        && request.resource.data.criadoPor == request.auth.uid
+        && request.resource.data.keys().hasOnly(['nome', 'emails', 'criadoPor', 'criadoEm']);
+
+      // Quem está na lista muda a lista (adiciona ou tira e-mails). O resto do documento não muda.
+      allow update: if logado() && meuEmail() in resource.data.emails
+        && listaValida(request.resource.data.emails)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['emails', 'nome']);
+
+      allow delete: if false;
+
+      match /{documento=**} {
+        allow read, write: if logado()
+          && meuEmail() in get(/databases/$(database)/documents/livros/$(livro)).data.emails;
+      }
+    }
+  }
+}

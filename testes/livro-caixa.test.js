@@ -105,6 +105,48 @@ test('planilha mensal: importação vira lançamentos com os totais da planilha'
   assert.equal(total.despesas, LC.arred(1000 + 99.9 + 420 + 1100 + 950));
 });
 
+test('planilha mensal: a aba antiga deixa de fora os anos das abas das pessoas', async () => {
+  const abas = await A.lerXLSX(pastaNoFormatoGastos());
+  const est = Dd.estadoVazio();
+  const selecao = abas.map((a) => {
+    const mensal = Dd.detectarMensal(a.linhas);
+    const nome = Dd.pessoaDaAba(a.nome);
+    const p = est.pessoas.find((x) => Dd.chaveNome(x.nome) === Dd.chaveNome(nome));
+    return { nome: a.nome, mensal, incluir: !!mensal && !mensal.resumo, pessoa: p ? p.id : `__nova:${nome || 'Casa'}` };
+  });
+  const cobertos = Dd.anosJaCobertos(selecao, 2026);
+  assert.deepEqual([...cobertos.keys()], [2026]);
+  assert.deepEqual(cobertos.get(2026), ['Gastos Nathy', 'Gastos vini']);
+  const antiga = selecao.find((a) => a.nome === 'Gastos');
+  antiga.anosFora = new Set([2026]);
+  const r = Dd.prepararImportacaoMensal(selecao, { anoPadrao: 2026 }, est, HOJE);
+  const novo = Dd.sanear({ ...est, pessoas: r.pessoas, categorias: r.categorias, lancamentos: r.itens });
+  const casa = novo.pessoas.find((p) => p.nome === 'Casa');
+  assert.equal(Dd.matrizMensal(novo, casa.id, 2025).meses[2].gasto, 1132, '2025 continua');
+  assert.equal(Dd.resumoMes(novo, '2026-01').despesas, LC.arred(1000 + 99.9 + 420 + 1100), 'o aluguel de 2026 da aba antiga não soma');
+  assert.ok(!r.mesesSubstituidos.get(casa.id).has('2026-01'), 'não apaga o que já existe em 2026');
+  // Com todos os anos de fora, a aba não entra e não cria a pessoa.
+  antiga.anosFora = new Set([2025, 2026]);
+  const r2 = Dd.prepararImportacaoMensal(selecao, { anoPadrao: 2026 }, est, HOJE);
+  assert.ok(!r2.pessoas.some((p) => p.nome === 'Casa'));
+});
+
+test('saldo de hoje: digitar o valor do banco acerta o saldo inicial', () => {
+  const est = Dd.estadoVazio();
+  const nathy = est.pessoas.find((p) => p.id === 'nathy');
+  nathy.saldoInicial = 100;
+  const lanca = (x) => est.lancamentos.push(Dd.normalizarLancamento({ pessoa: 'nathy', categoria: x.tipo === 'receita' ? 'salario' : 'comida', ...x }));
+  lanca({ data: '2026-09-05', descricao: 'Salário', tipo: 'receita', valor: 1000, situacao: 'pago' });
+  lanca({ data: '2026-09-20', descricao: 'Mercado', tipo: 'despesa', valor: 300, situacao: 'pago' });
+  lanca({ data: '2026-11-01', descricao: 'Conta futura', tipo: 'despesa', valor: 50, situacao: 'pendente' });
+  assert.equal(Dd.saldosPessoas(est, HOJE).get('nathy'), 800);
+  Dd.ajustarSaldo(est, 'nathy', 1234.56, HOJE);
+  assert.equal(Dd.saldosPessoas(est, HOJE).get('nathy'), 1234.56);
+  assert.equal(nathy.saldoInicial, 534.56);
+  Dd.ajustarSaldo(est, 'nathy', -20, HOJE);
+  assert.equal(Dd.saldosPessoas(est, HOJE).get('nathy'), -20);
+});
+
 test('planilha mensal: digitar na célula respeita os lançamentos feitos um a um', () => {
   const est = Dd.estadoVazio();
   est.lancamentos.push(Dd.normalizarLancamento({ data: '2026-09-10', descricao: 'Mercado', categoria: 'comida', tipo: 'despesa', valor: 120, pessoa: 'nathy' }));

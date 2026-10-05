@@ -26,6 +26,7 @@
     modoExemplo: false,
     salvamento: 'ok',
     erroSalvar: '',
+    errosNuvem: 0,
     cartoes: new Map(),
     planilha: null,
     mensal: null,
@@ -61,8 +62,10 @@
     if (!app.armazenamento) return;
     app.salvamento = 'salvando';
     renderStatus();
+    const errosAntes = app.errosNuvem;
     try {
       await app.armazenamento.salvar(app.estado);
+      if (app.errosNuvem !== errosAntes) return; // o banco recusou algo no caminho: o aviso já apareceu
       app.salvamento = salvarDepois.pendente() ? 'pendente' : 'ok';
       app.erroSalvar = '';
     } catch (e) {
@@ -73,7 +76,19 @@
     renderStatus();
   }
 
+  // Firebase: uma gravação que já tinha ido para a fila do banco foi recusada pelo servidor.
+  function aoErroNuvem(e) {
+    app.errosNuvem++;
+    const repetido = app.erroSalvar === e.message && app.salvamento === 'erro';
+    app.salvamento = 'erro';
+    app.erroSalvar = e.message;
+    renderStatus();
+    if (!repetido) LC.UI.aviso(e.message, { tipo: 'erro', duracao: 12000 });
+  }
+
   function aoMudarRemoto(m) {
+    // Na tela só havia exemplos (nada salvo): outra pessoa começou o livro-caixa. Abre de novo com os valores dela.
+    if (app.modoExemplo && !m.estado && app.armazenamento.modo === 'nuvem') { location.reload(); return; }
     if (m.estado) app.estado = Dd.sanear(m.estado);
     if (m.config) {
       const s = Dd.sanear({ ...m.config, lancamentos: app.estado.lancamentos });
@@ -237,13 +252,19 @@
     if (!ui.status || !app.armazenamento) return;
     const s = app.salvamento;
     const nuvem = app.armazenamento.modo === 'nuvem';
+    const firebase = app.armazenamento.provedor === 'firebase';
+    const semInternet = firebase && navigator.onLine === false;
     let texto, classe;
     if (app.modoExemplo) { texto = 'Exemplo: nada salvo ainda'; classe = 'neutro'; }
     else if (s === 'erro') { texto = 'Não salvo'; classe = 'erro'; }
+    else if (semInternet) { texto = 'Sem internet'; classe = 'salvando'; }
     else if (s === 'salvando' || s === 'pendente') { texto = 'Salvando…'; classe = 'salvando'; }
     else { texto = nuvem ? 'Salvo na nuvem' : 'Salvo neste navegador'; classe = 'ok'; }
     ui.status.className = 'status-salvamento status-' + classe;
-    ui.status.title = s === 'erro' ? app.erroSalvar : nuvem ? 'Salvo no armazenamento deste artefato do Claude (privado: dono e editores).' : 'Salvo no armazenamento deste navegador. Faça backups em Cadastros.';
+    ui.status.title = s === 'erro' ? app.erroSalvar
+      : semInternet ? 'Sem internet: o que você muda fica guardado neste aparelho e vai para a nuvem quando a internet voltar.'
+        : firebase ? `Salvo no livro-caixa compartilhado, aberto com ${app.armazenamento.sessao.usuario.email}. Aparece em todos os aparelhos de quem usa.`
+          : nuvem ? 'Salvo no armazenamento deste artefato do Claude (privado: dono e editores).' : 'Salvo no armazenamento deste navegador. Faça backups em Cadastros.';
     esvaziar(ui.status).append(el('span', { class: 'trilho-rotulo', text: texto }));
   }
 
@@ -692,11 +713,16 @@
     }
     const tipo = app.prefs.abaCategorias === 'receita' ? 'receita' : 'despesa';
 
-    const listaPessoas = el('ul', { class: 'cadastro-lista' }, cabecalhoCadastro(['Nome', 'Saldo inicial', 'Colunas'], ' pessoa'));
+    const saldos = Dd.saldosPessoas(est, hoje());
+    const listaPessoas = el('ul', { class: 'cadastro-lista' }, cabecalhoCadastro(['Nome', 'Saldo hoje', 'Colunas'], ' pessoa'));
     for (const p of est.pessoas) {
       listaPessoas.append(linhaCadastro({
         item: p, n: uso.get('p:' + p.id) || 0, rotulo: 'pessoa',
-        valor: { campo: 'saldoInicial', rotulo: 'Saldo inicial', dica: '0,00', negativo: true },
+        valor: {
+          campo: 'saldo-hoje', rotulo: 'Saldo hoje', dica: '0,00', negativo: true,
+          ler: () => saldos.get(p.id) || 0,
+          gravar: (v) => alterar((e) => Dd.ajustarSaldo(e, p.id, v, hoje())),
+        },
         extra: el('button', {
           type: 'button', class: 'botao botao-pequeno botao-fantasma cadastro-colunas', title: `Abrir a planilha mensal de ${p.nome}`,
           onclick: () => { salvarPrefs({ abaMensal: p.id }); irPara('mensal'); },
@@ -728,12 +754,14 @@
     };
 
     const nuvem = app.armazenamento.modo === 'nuvem';
+    const firebase = app.armazenamento.provedor === 'firebase';
     const anos = Dd.anosComDados(est, hoje());
     raiz.append(
       el('section', { class: 'cartao cadastro' },
         el('header', { class: 'cartao-cabeca' },
           el('div', null, el('h2', { class: 'cartao-titulo', text: 'Pessoas' }), el('p', { class: 'cartao-sub', text: 'Cada pessoa tem a própria planilha mensal, como as abas "Gastos" do Excel. As colunas se escolhem na própria planilha.' }))),
         listaPessoas,
+        el('p', { class: 'ajuda cadastro-nota', text: 'Saldo hoje: quanto a pessoa tem agora, somando o que recebeu e tirando o que gastou (só o que já foi pago). Se não bater com o banco, digite o valor certo: a diferença vira o saldo inicial.' }),
         el('button', { type: 'button', class: 'botao botao-fantasma', onclick: novaPessoa }, icone('adicionar'), 'Nova pessoa')),
       el('section', { class: 'cartao cadastro' },
         el('header', { class: 'cartao-cabeca' },
@@ -741,12 +769,15 @@
           LC.UI.segmentado([{ valor: 'despesa', rotulo: 'Gastos' }, { valor: 'receita', rotulo: 'Recebimentos' }], tipo, (v) => { salvarPrefs({ abaCategorias: v }); render(); }, { rotulo: 'Tipo de categoria', compacto: true })),
         listaCats,
         el('button', { type: 'button', class: 'botao botao-fantasma', onclick: novaCategoria }, icone('adicionar'), tipo === 'despesa' ? 'Nova categoria de gasto' : 'Nova categoria de recebimento')),
+      firebase ? cartaoAcesso() : null,
       el('section', { class: 'cartao cadastro dados' },
         el('header', { class: 'cartao-cabeca' },
           el('div', null, el('h2', { class: 'cartao-titulo', text: 'Dados e backup' }),
-            el('p', { class: 'cartao-sub', text: nuvem
-              ? 'Seus dados ficam salvos no armazenamento deste artefato do Claude, visíveis só para você e para quem você der acesso de edição.'
-              : 'Seus dados ficam salvos neste navegador, neste computador. Baixe um backup de vez em quando e guarde em lugar seguro.' }))),
+            el('p', { class: 'cartao-sub', text: firebase
+              ? 'Os valores ficam na nuvem e aparecem em todos os aparelhos de quem usa este livro-caixa. Mesmo assim, baixe um backup de vez em quando.'
+              : nuvem
+                ? 'Seus dados ficam salvos no armazenamento deste artefato do Claude, visíveis só para você e para quem você der acesso de edição.'
+                : 'Seus dados ficam salvos neste navegador, neste computador. Baixe um backup de vez em quando e guarde em lugar seguro.' }))),
         el('div', { class: 'dados-acoes' },
           botaoDado('excel', `Exportar Excel de ${anos[0]}`, 'No formato da sua planilha: uma aba "Gastos" por pessoa e a "Total finanças", com fórmulas e gráficos editáveis no Excel.', () => exportarAno(anos[0])),
           botaoDado('importar', 'Importar planilha ou extrato', 'O seu Gastos.xlsx (abas mensais), um .csv, um extrato .ofx do banco ou um backup .json.', () => abrirImportacao()),
@@ -765,6 +796,86 @@
             ['Digitar um número', 'Começa a editar a célula da planilha mensal'], ['Tab', 'Confirmar e ir para a próxima coluna'], ['Esc', 'Cancelar a edição'],
             ['Delete', 'Apagar o valor da célula (planilha mensal) ou o lançamento (lançamentos)'], ['Ctrl + Enter', 'Salvar no editor de gráfico']]
             .map(([k, d]) => [el('dt', null, el('kbd', { text: k })), el('dd', { text: d })]))));
+  }
+
+  // Login na nuvem (Firebase): quem pode abrir este livro-caixa, e a conta de quem está usando.
+  function cartaoAcesso() {
+    const s = app.armazenamento.sessao;
+    const eu = s.usuario.email;
+    const lista = el('ul', { class: 'lista-acesso' }, s.livro.emails.map((e) => el('li', null,
+      icone('email', 'ico ico-mini'),
+      el('span', { class: 'lista-acesso-email', text: e }),
+      e === eu ? el('span', { class: 'etiqueta', text: 'você' }) : null,
+      el('button', {
+        type: 'button', class: 'botao-icone', title: e === eu ? 'Sair deste livro-caixa' : 'Tirar da lista',
+        'aria-label': e === eu ? 'Sair deste livro-caixa' : `Tirar ${e} da lista`, disabled: s.livro.emails.length <= 1, onclick: () => tirarAcesso(e),
+      }, icone('lixeira')))));
+    const novo = el('input', {
+      id: 'acesso-novo', class: 'entrada', type: 'text', inputmode: 'email', autocomplete: 'off', autocapitalize: 'none', spellcheck: 'false',
+      placeholder: 'nome@gmail.com', 'aria-label': 'E-mail de quem vai usar',
+    });
+    const botao = el('button', { type: 'submit', class: 'botao' }, icone('adicionar'), 'Adicionar');
+    const form = el('form', { class: 'acesso-novo', novalidate: true }, novo, botao);
+    form.addEventListener('submit', async (ev) => {
+      ev.preventDefault();
+      botao.disabled = true;
+      try {
+        const novos = await LC.Nuvem.adicionarEmails(novo.value);
+        novo.value = '';
+        const varios = novos.length > 1;
+        LC.UI.aviso(`${novos.join(', ')} já ${varios ? 'podem' : 'pode'} entrar: é só abrir este mesmo endereço e criar a conta com ${varios ? 'esses e-mails' : 'esse e-mail'}.`, { tipo: 'ok', duracao: 9000 });
+        render();
+      } catch (e) {
+        LC.UI.aviso(e.message, { tipo: 'erro', duracao: 7000 });
+      } finally {
+        if (botao.isConnected) botao.disabled = false;
+      }
+    });
+    return el('section', { class: 'cartao cadastro acesso-cartao' },
+      el('header', { class: 'cartao-cabeca' },
+        el('div', null, el('h2', { class: 'cartao-titulo', text: 'Quem usa este livro-caixa' }),
+          el('p', { class: 'cartao-sub', text: 'Cada e-mail da lista entra com a própria conta e vê os mesmos valores, em qualquer aparelho. Quem não está na lista não consegue abrir.' }))),
+      lista,
+      form,
+      el('div', { class: 'conta-linha' },
+        el('span', { class: 'ajuda' }, 'Você entrou como ', el('strong', { text: eu }), '.'),
+        el('button', { type: 'button', class: 'link', onclick: trocarSenha }, 'Trocar a senha'),
+        el('button', { type: 'button', class: 'botao botao-fantasma', onclick: sairDaConta }, icone('sair'), 'Sair da conta')));
+  }
+
+  async function tirarAcesso(email) {
+    const euMesmo = email === app.armazenamento.sessao.usuario.email;
+    const ok = await LC.UI.confirmar(euMesmo
+      ? { titulo: 'Sair deste livro-caixa?', texto: 'Você perde o acesso a ele em todos os aparelhos. Os valores continuam para as outras pessoas da lista.', botao: 'Sair do livro-caixa', perigo: true }
+      : { titulo: `Tirar ${email} da lista?`, texto: 'Essa pessoa deixa de abrir o livro-caixa. Os valores continuam.', botao: 'Tirar da lista', perigo: true });
+    if (!ok) return;
+    try {
+      await LC.Nuvem.removerEmail(email);
+      if (euMesmo) await LC.Nuvem.sair(); else render();
+    } catch (e) {
+      LC.UI.aviso(e.message, { tipo: 'erro', duracao: 7000 });
+    }
+  }
+
+  async function trocarSenha() {
+    try {
+      await LC.Nuvem.trocarSenha();
+      LC.UI.aviso(`Mandamos para ${app.armazenamento.sessao.usuario.email} um link para criar uma senha nova.`, { tipo: 'ok', duracao: 8000 });
+    } catch (e) {
+      LC.UI.aviso(e.message, { tipo: 'erro', duracao: 7000 });
+    }
+  }
+
+  async function sairDaConta() {
+    if (salvarDepois.pendente()) salvarDepois.agora();
+    const ok = await LC.UI.confirmar({
+      titulo: 'Sair da conta?',
+      texto: navigator.onLine === false
+        ? 'Sem internet agora: o que ainda não foi para a nuvem se perde ao sair. Se puder, espere a internet voltar.'
+        : 'A cópia do livro-caixa guardada neste aparelho é apagada. Para abrir de novo, é só entrar com o e-mail e a senha.',
+      botao: 'Sair',
+    });
+    if (ok) await LC.Nuvem.sair();
   }
 
   function botaoDado(nomeIcone, titulo, texto, acao) {
@@ -787,12 +898,15 @@
       aoMudar((x) => { x.nome = v; });
     });
     nome.addEventListener('keydown', (e) => { if (e.key === 'Enter') nome.blur(); });
+    // valor: campo do item, ou ler/gravar próprios (o "Saldo hoje" é calculado e ajusta o saldo inicial).
     const entradas = (valor ? [valor] : []).map((c) => {
-      const entrada = el('input', { id: `${c.campo}-${item.id}`, class: 'entrada entrada-valor', type: 'text', inputmode: 'decimal', autocomplete: 'off', placeholder: c.dica, value: item[c.campo] ? fmt.numero(item[c.campo]) : '', 'aria-label': `${c.rotulo} de ${item.nome}` });
+      const atual = () => (c.ler ? c.ler(item) : item[c.campo]);
+      const texto = () => (atual() ? fmt.numero(atual()) : '');
+      const entrada = el('input', { id: `${c.campo}-${item.id}`, class: 'entrada entrada-valor', type: 'text', inputmode: 'decimal', autocomplete: 'off', placeholder: c.dica, value: texto(), 'aria-label': `${c.rotulo} de ${item.nome}` });
       entrada.addEventListener('change', () => {
         const v = entrada.value.trim() === '' ? 0 : LC.paraNumero(entrada.value);
-        if (!Number.isFinite(v) || (!c.negativo && v < 0)) { LC.UI.aviso('Digite um valor como 1.200,00.', { tipo: 'erro' }); entrada.value = item[c.campo] ? fmt.numero(item[c.campo]) : ''; return; }
-        aoMudar((x) => { x[c.campo] = LC.arred(v); });
+        if (!Number.isFinite(v) || (!c.negativo && v < 0)) { LC.UI.aviso('Digite um valor como 1.200,00.', { tipo: 'erro' }); entrada.value = texto(); return; }
+        if (c.gravar) c.gravar(LC.arred(v)); else aoMudar((x) => { x[c.campo] = LC.arred(v); });
       });
       entrada.addEventListener('keydown', (e) => { if (e.key === 'Enter') entrada.blur(); });
       return el('div', { class: 'cadastro-campo' }, el('span', { class: 'entrada-prefixo' }, el('span', { text: 'R$' }), entrada));
@@ -1137,20 +1251,30 @@
           nome: a.nome, mensal: a.mensal, papeis: {},
           pessoa: existente ? existente.id : `__nova:${sugestao || 'Casa'}`,
           incluir: !a.mensal.resumo,
+          anosFora: new Set(),
         };
       });
       titulo.textContent = `Importar ${arq.nome}`;
+      const juntar = (l) => (l.length > 1 ? `${l.slice(0, -1).join(', ')} e ${l[l.length - 1]}` : l.join(''));
 
       const desenhar = () => {
         esvaziar(corpo);
+        // A aba sem dono (a "Gastos" antiga) deixa de fora os anos que as abas das pessoas já cobrem,
+        // a não ser que a pessoa tenha mexido nos anos dela.
+        const cobertos = Dd.anosJaCobertos(abas, op.anoPadrao);
+        for (const aba of abas) {
+          if (aba.anosMexidos || aba.mensal.resumo || Dd.pessoaDaAba(aba.nome)) continue;
+          aba.anosFora = new Set(aba.mensal.anos.filter((a) => cobertos.has(a)));
+        }
         const r = Dd.prepararImportacaoMensal(abas, op, est, hoje());
         corpo.append(el('p', { class: 'dialogo-texto' }, `Encontrei ${plural(abas.length, 'planilha mensal', 'planilhas mensais')} (um mês por linha, uma categoria por coluna). Confira de quem é cada uma:`));
         const lista = el('ul', { class: 'imp-abas' });
         for (const aba of abas) {
           const m = aba.mensal;
           const usaveis = m.colunas.filter((c) => (aba.papeis[c.indice] || c.papel) !== 'ignorar');
+          const valores = m.entradas.filter((e) => usaveis.some((c) => c.indice === e.coluna)).length;
           const info = m.resumo ? 'só totais calculados: não precisa importar'
-            : `${plural(usaveis.length, 'coluna', 'colunas')} · ${m.entradas.length ? `${plural(m.entradas.length, 'valor', 'valores')}${m.anos.length ? ' · ' + m.anos.join(', ') : ''}` : 'nenhum valor preenchido ainda'}`;
+            : `${plural(usaveis.length, 'coluna', 'colunas')} · ${valores ? `${plural(valores, 'valor', 'valores')}${m.anos.length ? ' · ' + m.anos.join(', ') : ''}` : 'nenhum valor preenchido ainda'}`;
           const nomesNovos = new Set();
           const opcoesPessoa = [...est.pessoas.map((p) => [p.id, p.nome])];
           for (const a of abas) if (a.pessoa.startsWith('__nova:')) nomesNovos.add(a.pessoa);
@@ -1160,10 +1284,32 @@
             el('div', { class: 'imp-mapa' }, m.colunas.map((c) => LC.UI.campo(c.nome, LC.UI.selecao(`imp-${abas.indexOf(aba)}-${c.indice}`,
               [['despesa', 'Gasto'], ['receita', 'Recebimento'], ['ignorar', 'Não importar (total)']], aba.papeis[c.indice] || c.papel,
               (v) => { aba.papeis[c.indice] = v; desenhar(); })))));
+          let anos = null;
+          if (!m.resumo && aba.incluir && (m.anos.length > 1 || aba.anosFora.size)) {
+            const sobrepostos = m.anos.filter((a) => cobertos.has(a));
+            const fora = sobrepostos.filter((a) => aba.anosFora.has(a));
+            const dentro = sobrepostos.filter((a) => !aba.anosFora.has(a));
+            const donos = (lista) => juntar([...new Set(lista.flatMap((a) => cobertos.get(a)))]);
+            anos = el('div', { class: 'imp-anos' },
+              el('span', { class: 'campo-rotulo', text: 'Anos' }),
+              el('div', { class: 'chips', role: 'group', 'aria-label': `Anos da aba ${aba.nome}` }, m.anos.map((ano) => {
+                const marcado = !aba.anosFora.has(ano);
+                const n = m.entradas.filter((e) => (e.ano || op.anoPadrao) === ano && usaveis.some((c) => c.indice === e.coluna)).length;
+                return el('button', {
+                  type: 'button', class: 'chip', 'aria-pressed': String(marcado),
+                  onclick: () => { aba.anosMexidos = true; if (marcado) aba.anosFora.add(ano); else aba.anosFora.delete(ano); desenhar(); },
+                }, `${ano} · ${plural(n, 'valor', 'valores')}`);
+              })),
+              fora.length ? el('p', { class: 'ajuda imp-anos-aviso' },
+                `${juntar(fora)} ${fora.length > 1 ? 'ficaram' : 'ficou'} de fora porque ${fora.length > 1 ? 'já são os anos' : 'já é o ano'} de ${donos(fora)}, e a Total finanças da planilha soma só essas abas. Marque se quiser trazer esses valores também.`) : null,
+              dentro.length ? el('p', { class: 'ajuda imp-anos-aviso alerta' }, icone('alerta', 'ico ico-mini'),
+                ` ${juntar(dentro)} também ${dentro.length > 1 ? 'são os anos' : 'é o ano'} de ${donos(dentro)}. O que for lançado nos dois lugares conta duas vezes.`) : null);
+          }
           lista.append(el('li', { class: 'imp-aba' + (aba.incluir ? '' : ' desligada') },
             el('div', { class: 'imp-aba-topo' },
               LC.UI.interruptor(`imp-incluir-${abas.indexOf(aba)}`, aba.nome, aba.incluir, (v) => { aba.incluir = v; desenhar(); }, { ajuda: info }),
               m.resumo ? null : LC.UI.campo('De quem é', LC.UI.selecao(`imp-pessoa-${abas.indexOf(aba)}`, opcoesPessoa, aba.pessoa, (v) => { aba.pessoa = v; desenhar(); }), { classe: 'imp-pessoa' })),
+            anos,
             m.resumo ? null : colunasDet));
         }
         corpo.append(lista);
@@ -1369,16 +1515,36 @@
       prefs: () => app.prefs, salvarPrefs, estado: () => app.estado, hoje, alterar, exportarAno,
     });
 
-    app.armazenamento = await S.iniciar({ obterEstado: () => app.estado });
+    // Com o Firebase ligado, aqui aparecem as telas de login e cadastro até haver um livro-caixa aberto.
+    app.armazenamento = await S.iniciar({ obterEstado: () => (app.modoExemplo ? null : app.estado) });
+    const firebase = app.armazenamento.provedor === 'firebase';
     let bruto = await app.armazenamento.carregar();
     if (bruto && bruto.falhou) {
+      if (firebase) {
+        const negado = bruto.erro && bruto.erro.code === 'permission-denied';
+        await LC.Nuvem.telaErro(negado
+          ? 'O seu e-mail não tem permissão para abrir este livro-caixa. Peça para alguém da lista conferir em Cadastros, ou confira as regras do Firebase (veja o README).'
+          : 'O livro-caixa não respondeu. Confira a internet e tente de novo.');
+      }
       app.armazenamento = S.local('falha');
       bruto = await app.armazenamento.carregar();
       LC.UI.aviso('Não foi possível abrir o armazenamento do Claude agora. Usando o deste navegador.', { tipo: 'erro', duracao: 9000 });
     }
+    // Livro-caixa novo, ainda vazio: leva o que já estava guardado neste navegador (de antes de ligar o login).
+    let trouxe = false;
+    if (!bruto && firebase) {
+      const local = await S.local().carregar();
+      if (local && Array.isArray(local.lancamentos) && local.lancamentos.some((t) => !t.exemplo)) { bruto = local; trouxe = true; }
+    }
     if (bruto) app.estado = Dd.sanear(bruto);
     else { app.estado = Dd.gerarExemplo(hoje()); app.modoExemplo = true; }
     app.armazenamento.escutar(aoMudarRemoto);
+    if (app.armazenamento.escutarErros) app.armazenamento.escutarErros(aoErroNuvem);
+    if (firebase) {
+      LC.Nuvem.aoMudarLivro(() => { if (app.prefs.vista === 'cadastros') render(); });
+      window.addEventListener('online', renderStatus);
+      window.addEventListener('offline', renderStatus);
+    }
 
     $('#carregando').hidden = true;
     $('#app').removeAttribute('aria-busy');
@@ -1386,6 +1552,10 @@
       LC.UI.aviso('A biblioteca de gráficos não carregou. Confira se a pasta vendor/ está junto do index.html.', { tipo: 'erro', duracao: 0 });
     }
     render();
+    if (trouxe) {
+      agendarSalvar();
+      LC.UI.aviso('Os valores que estavam neste navegador foram para o livro-caixa na nuvem.', { tipo: 'ok', duracao: 8000 });
+    }
   }
 
   window.LivroCaixa = app; // ajuda a inspecionar pelo console do navegador

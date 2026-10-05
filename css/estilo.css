@@ -917,6 +917,7 @@ select.celula-entrada { background-image: linear-gradient(45deg, transparent 50%
 .vista-cadastros { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; }
 .cadastro { display: flex; flex-direction: column; padding-bottom: 10px; }
 .cadastro > .botao-fantasma { align-self: flex-start; margin: 4px 12px 0; }
+.cadastro-nota { margin: 6px 18px 2px; line-height: 1.45; }
 .cadastro.dados, .cadastro.atalhos { grid-column: 1 / -1; }
 .cadastro-lista { list-style: none; margin: 0; padding: 0 8px; }
 .cadastro-linha {
@@ -1284,7 +1285,7 @@ dialog::backdrop { background: var(--veu); }
 .grade-mensal tbody tr.mes-futuro th.c-mes { color: var(--tinta-2); font-weight: 400; }
 .grade-mensal tbody tr:hover td:not(.calc) { background: var(--superficie-2); }
 .grade-mensal tfoot .linha-media td, .grade-mensal tfoot .linha-media th { color: var(--tinta-2); font-weight: 400; bottom: 0; }
-.grade-mensal tfoot tr:first-child td, .grade-mensal tfoot tr:first-child th { bottom: 36px; }
+.grade-mensal tfoot tr:first-child:not(:last-child) td, .grade-mensal tfoot tr:first-child:not(:last-child) th { bottom: 36px; }
 .grade-mensal .linha-titulos th { text-align: right; padding: 0 6px 0 10px; }
 .grade-mensal .linha-titulos th.c-mes, .grade-mensal .linha-titulos th.c-num { text-align: left; }
 .cab-coluna { display: inline-flex; align-items: center; justify-content: flex-end; gap: 6px; width: 100%; white-space: nowrap; }
@@ -1308,6 +1309,11 @@ dialog::backdrop { background: var(--veu); }
 .imp-pessoa { align-self: end; }
 .imp-colunas summary { cursor: pointer; font-size: 12.5px; color: var(--acento-texto); padding: 4px 0; }
 .imp-colunas .imp-mapa { margin-top: 8px; }
+.imp-anos { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin: 6px 0 2px; }
+.imp-anos .campo-rotulo { margin: 0; }
+.imp-anos-aviso { flex-basis: 100%; margin: 0; }
+.imp-anos-aviso.alerta { color: var(--atencao); }
+.imp-anos-aviso .ico { vertical-align: -2px; }
 .dados-anos { padding: 0 18px 4px; }
 @media (max-width: 720px) {
   .imp-aba-topo { grid-template-columns: minmax(0, 1fr); }
@@ -1316,3 +1322,51 @@ dialog::backdrop { background: var(--veu); }
   .aba-mensal { flex: none; }
   .nav { grid-template-columns: repeat(5, minmax(0, 1fr)); }
 }
+
+/* Acesso: login, cadastro e escolha do livro-caixa (só com o Firebase ligado em js/config-nuvem.js) */
+.acesso {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  overflow-y: auto;
+  background: var(--fundo);
+  padding: max(24px, env(safe-area-inset-top, 0px)) 16px max(24px, env(safe-area-inset-bottom, 0px));
+}
+.acesso-caixa { width: 100%; max-width: 420px; margin: clamp(0px, 7vh, 72px) auto 0; display: flex; flex-direction: column; gap: 14px; }
+.acesso-marca { display: flex; align-items: center; gap: 11px; margin-bottom: 8px; }
+.acesso-marca .marca-textos { display: flex; } /* no celular a barra de cima esconde o nome; aqui ele fica */
+.acesso .segmentado { display: flex; }
+.acesso .segmento { flex: 1; justify-content: center; min-height: 34px; }
+.acesso-titulo { margin: 6px 0 0; font: 600 24px/1.2 var(--fonte-titulo); letter-spacing: -0.01em; text-wrap: balance; }
+.acesso-subtitulo { margin: 0; font: 600 15px/1.3 var(--fonte-titulo); }
+.acesso-texto { margin: 0; color: var(--tinta-2); line-height: 1.55; }
+.acesso-texto strong { color: var(--tinta); font-weight: 600; overflow-wrap: anywhere; }
+.acesso-form, .acesso-bloco { display: flex; flex-direction: column; gap: 14px; padding: 18px; background: var(--superficie); border: 1px solid var(--regua); border-radius: 12px; }
+.acesso-bloco { gap: 10px; }
+.acesso-form-solto { padding: 0; border: 0; background: none; }
+.acesso-form .campo .entrada { width: 100%; }
+.acesso-senha { position: relative; }
+.acesso-senha .entrada { width: 100%; padding-right: 44px; }
+.acesso-ver { position: absolute; top: 50%; right: 4px; transform: translateY(-50%); }
+.acesso-botao { width: 100%; justify-content: center; min-height: 42px; }
+.acesso-acoes { display: flex; flex-direction: column; gap: 8px; }
+.acesso-aviso { margin: 0; font-size: 13px; line-height: 1.45; }
+.acesso-aviso.erro { color: var(--neg); }
+.acesso-aviso.ok { color: var(--pos); }
+.acesso-rodape { margin: 2px 0 0; font-size: 13px; color: var(--apagada); text-align: center; overflow-wrap: anywhere; }
+.acesso-selo { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 12px; background: var(--acento-lavagem); color: var(--acento-texto); }
+.acesso-selo .ico { width: 22px; height: 22px; }
+.acesso-selo-alerta { background: rgba(250, 178, 25, 0.18); color: var(--atencao); }
+.acesso-livros { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.acesso-livro { width: 100%; flex-direction: column; align-items: flex-start; gap: 2px; padding: 10px 14px; text-align: left; }
+
+/* Cadastros → Quem usa este livro-caixa */
+.cadastro.acesso-cartao { grid-column: 1 / -1; }
+.lista-acesso { list-style: none; margin: 0; padding: 0 18px; }
+.lista-acesso li { display: flex; align-items: center; gap: 10px; min-height: 44px; border-bottom: 1px solid var(--regua); }
+.lista-acesso li > .ico { color: var(--apagada); flex: none; }
+.lista-acesso-email { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.acesso-novo { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px 18px 4px; }
+.acesso-novo .entrada { flex: 1 1 220px; min-width: 0; }
+.conta-linha { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding: 10px 18px 4px; }
+.conta-linha .botao-fantasma { margin-left: auto; }

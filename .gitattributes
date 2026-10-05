@@ -2,3 +2,4 @@
 * text=auto
 *.bat text eol=crlf
 vendor/*.min.js -diff linguist-vendored
+vendor/firebase/*.js -diff linguist-vendored

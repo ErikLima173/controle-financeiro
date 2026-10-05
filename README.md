@@ -2,14 +2,16 @@
 
 Controle financeiro visual no formato da planilha **Gastos**: uma aba por pessoa (um mês por linha, uma
 categoria por coluna, Total gasto, Salário e Total restante) e a aba **Total finanças** que soma todo mundo.
-Roda no navegador, sem instalar nada, e os dados ficam no seu computador.
+Roda no navegador, sem instalar nada.
 
 ## Como abrir
 
-- **Windows:** dois cliques em `abrir.bat` (ou direto no `index.html`).
-- **Qualquer sistema:** abra o `index.html` no Chrome, Edge ou Firefox.
-- Funciona sem internet: a biblioteca de gráficos (Chart.js) vem junto, na pasta `vendor/`. A fonte IBM Plex
-  vem do Google Fonts quando há internet; sem ela, o sistema usa a fonte do computador.
+- **Na internet, para a casa toda:** publique no Vercel e ligue o login (passo a passo abaixo). Cada pessoa entra
+  com o próprio e-mail e senha e vê os mesmos valores, ao vivo, no celular e no computador.
+- **Só no seu computador:** dois cliques em `abrir.bat` (Windows) ou abra o `index.html` no Chrome, Edge ou Firefox.
+  Sem o login ligado, os dados ficam só no navegador onde você abriu.
+- A biblioteca de gráficos (Chart.js) e o Firebase vêm junto, na pasta `vendor/`. A fonte IBM Plex vem do Google
+  Fonts quando há internet; sem ela, o sistema usa a fonte do aparelho.
 
 ## Primeiros passos
 
@@ -17,8 +19,12 @@ Roda no navegador, sem instalar nada, e os dados ficam no seu computador.
 2. Clique em **Importar minha planilha** e escolha o seu `Gastos.xlsx`. O sistema reconhece as abas
    "Gastos Nathy" e "Gastos vini", e também a aba oculta "Gastos" com os blocos de 2025 e 2026.
    Ele pergunta de quem é cada aba, mostra quanto entra em cada ano e tira os exemplos.
+   Na aba antiga, os anos que as abas das pessoas já cobrem ficam desmarcados, porque a Total finanças da
+   planilha soma só as abas das pessoas e importar os dois contaria os mesmos gastos duas vezes. Dá para marcar.
 3. Daí em diante, use a tela **Mensal** como a sua planilha: clique numa célula e digite o total do mês.
    Total gasto, Total restante, Total e Média são calculados sozinhos.
+4. Em **Cadastros → Pessoas**, confira o **Saldo hoje** de cada pessoa. Se não bater com o banco, digite o valor
+   certo: a diferença vira o saldo inicial, e o saldo segue somando o que entra e tirando o que sai.
 
 ## Telas
 
@@ -28,7 +34,7 @@ Roda no navegador, sem instalar nada, e os dados ficam no seu computador.
 | **Mensal** | As abas "Gastos ‹pessoa›" e "Total finanças", editáveis pelo teclado como no Excel, com seletor de ano, colunas que você adiciona, move ou tira, e um gráfico de recebido x gasto |
 | **Lançamentos** | Opcional: cada gasto ou recebimento numa linha (mercado, posto…), com busca, filtros, saldo corrido, edição direto na célula, parcelamento e repetição mensal. A planilha mensal soma esses lançamentos na célula do mês |
 | **Orçamento** | Quanto cada categoria pode gastar por mês, quanto já foi usado e quanto dá para gastar por dia até o fim do mês |
-| **Cadastros** | Pessoas, categorias (cores), exportação, backup e atalhos |
+| **Cadastros** | Pessoas (com o saldo de hoje de cada uma), categorias e cores, quem usa o livro-caixa (com o login ligado), exportação, backup e atalhos |
 
 ## Gráficos editáveis
 
@@ -58,12 +64,61 @@ Na importação, a opção "Substituir os valores desses meses" evita somar duas
 Também dá para exportar CSV, baixar um backup completo (.json) e baixar uma planilha modelo vazia.
 Na importação, além do formato mensal, o sistema aceita listas de lançamentos em .xlsx ou .csv e extratos .ofx do banco.
 
+## Publicar no Vercel
+
+1. Entre em [vercel.com](https://vercel.com) com a sua conta do GitHub.
+2. **Add New → Project** e importe este repositório (se pedir, autorize o acesso a ele).
+3. Deixe as configurações como estão (Framework Preset: **Other**, sem comando de build) e clique em **Deploy**.
+
+Sai um endereço como `controle-financeiro.vercel.app`. Cada mudança no `main` vai para o ar sozinha.
+Sem o passo seguinte, cada aparelho que abrir o endereço guarda a própria cópia, separada das outras.
+
+## Login e dados na nuvem (Firebase)
+
+Com o Firebase ligado, o site passa a ter tela de login e cadastro, e os valores ficam num banco de dados que
+aparece ao vivo em todos os aparelhos de quem usa: o que uma pessoa digita aparece na tela da outra em instantes,
+sem recarregar. Sem internet, o que você muda fica guardado no aparelho e sobe quando ela volta.
+O plano gratuito do Firebase (Spark) sobra para uma casa e não pede cartão.
+
+**Uma vez só, em [console.firebase.google.com](https://console.firebase.google.com):**
+
+1. **Projeto:** Criar projeto (Create project) → um nome, como `livro-caixa`. O Google Analytics pode ficar desligado.
+2. **Login:** Authentication → Vamos começar (Get started) → Método de login (Sign-in method) → **E-mail/senha** → Ativar → Salvar.
+3. **Banco de dados:** Firestore Database → Criar banco de dados (Create database) → edição Standard → local
+   `southamerica-east1 (São Paulo)` → **modo de produção** (production mode).
+4. **Regras:** Firestore Database → Regras (Rules) → apague o que estiver lá, cole o conteúdo do arquivo
+   [`firestore.rules`](firestore.rules) deste repositório → **Publicar** (Publish).
+5. **Endereço do site:** Authentication → Configurações (Settings) → Domínios autorizados (Authorized domains) →
+   Adicionar domínio → o endereço do Vercel, como `controle-financeiro.vercel.app`. Assim o link dos e-mails volta para o site.
+6. **Ligar no site:** Configurações do projeto (engrenagem) → Seus apps (Your apps) → ícone **`</>`** (Web) → um apelido →
+   Registrar app. Copie o objeto `firebaseConfig` que aparece e cole em [`js/config-nuvem.js`](js/config-nuvem.js), no
+   lugar do `null` (dá para editar pelo próprio site do GitHub, no lápis do arquivo). O Vercel publica sozinho.
+
+**Depois, no site:**
+
+- A primeira pessoa cria a conta, confirma o e-mail (chega um link; veja também o spam) e toca em
+  **Criar o livro-caixa**, escrevendo o e-mail de quem vai usar junto.
+- A outra pessoa cria a conta com esse e-mail, confirma, e o mesmo livro-caixa abre direto.
+- **Cadastros → Quem usa este livro-caixa** mostra a lista: dá para adicionar e tirar e-mails, trocar a senha e sair.
+  Quem sai da lista perde o acesso na hora.
+- Se o navegador já tinha valores de antes de ligar o login, eles vão para o livro-caixa novo.
+
+**Segurança:**
+
+- Os valores de `js/config-nuvem.js` não são senha: só dizem qual é o projeto. Quem protege os dados são as regras
+  do `firestore.rules`: só quem entrou com um e-mail **confirmado** que está na lista do livro-caixa lê ou grava.
+- Para ninguém mais conseguir criar conta: depois que todos da casa tiverem conta, Authentication → Configurações →
+  Ações do usuário (User actions) → desmarque a criação de contas (Enable create / sign-up).
+- Para só certas pessoas poderem criar um livro-caixa, troque a função `podeCriar()` no `firestore.rules` (o arquivo
+  explica como) e publique as regras de novo.
+
 ## Onde ficam os dados
 
-No navegador do computador onde você abriu o Livro-Caixa (localStorage). Nada é enviado para servidor nenhum.
-
-- Faça um backup de vez em quando: **Cadastros → Baixar backup**.
-- Para levar a outro computador ou navegador, importe esse backup lá.
+- **Com o login ligado:** no Cloud Firestore do seu projeto do Firebase, com uma cópia em cada aparelho
+  (por isso abre sem internet). Sair da conta apaga a cópia do aparelho.
+- **Sem o login:** no navegador do aparelho onde você abriu o Livro-Caixa (localStorage). Nada é enviado para servidor nenhum.
+  Para levar a outro computador ou navegador, baixe um backup e importe lá.
+- Nos dois casos, faça um backup de vez em quando: **Cadastros → Baixar backup**.
 - Planilhas, extratos e backups (`.xlsx`, `.csv`, `.ofx`, `livro-caixa-backup-*.json`) estão no `.gitignore`,
   para não irem parar no GitHub por engano. Este repositório é público.
 
@@ -89,16 +144,29 @@ HTML, CSS e JavaScript puro, sem build. É só editar e recarregar a página.
 index.html              estrutura da página e ícones
 css/estilo.css          tema claro e escuro, layout e componentes
 js/util.js              formatação pt-BR, datas, números ("1.234,56"), cores e DOM
-js/dados.js             pessoas, categorias, lançamentos, planilha mensal, importação e contas dos gráficos
+js/dados.js             pessoas, categorias, lançamentos, planilha mensal, saldos, importação e contas dos gráficos
 js/arquivos.js          leitura de .xlsx, .csv e .ofx; Excel no formato Gastos (fórmulas e gráficos nativos)
-js/armazenamento.js     onde salvar (navegador ou nuvem do Claude) e downloads
+js/armazenamento.js     onde salvar (navegador, Firebase ou nuvem do Claude) e downloads
+js/config-nuvem.js      configuração do Firebase (null = sem login, tudo no navegador)
+js/nuvem.js             login, cadastro, confirmação do e-mail e o livro-caixa compartilhado no Firebase
 js/ui.js                avisos, confirmações, menus, seletor de cor e controles
 js/graficos.js          gráficos (Chart.js), cartões do painel e o editor de gráficos
 js/mensal.js            a tela Mensal (abas por pessoa e Total finanças)
 js/planilha.js          a tela Lançamentos
 js/app.js               navegação, painel, orçamento, cadastros, formulários e importação
-vendor/                 Chart.js 4.5.1 (licença MIT)
-testes/                 testes automatizados (Node)
+firestore.rules         regras de segurança do banco (quem pode ler e gravar)
+firebase.json           emuladores do Firebase para os testes (e "firebase deploy --only firestore:rules", se quiser)
+vendor/                 Chart.js 4.5.1 (licença MIT) e Firebase 12.19.0 (licença Apache 2.0)
+testes/                 testes automatizados
 ```
 
-Testes (Node 18 ou mais novo): `npm test` ou `node --test testes/*.test.js`.
+Testes (Node 18 ou mais novo):
+
+- `npm test`: números, datas, leitura de arquivos, planilha mensal, saldos e Excel.
+- Login e sincronização, com os emuladores do Firebase (precisa de Java 11 ou mais novo e do Playwright):
+
+  ```text
+  npm install -g firebase-tools
+  npm install --no-save playwright && npx playwright install chromium
+  firebase emulators:exec --project demo-livro-caixa "node testes/nuvem/sincronizacao.js"
+  ```

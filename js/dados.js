@@ -324,6 +324,15 @@
     return saldos;
   }
 
+  // "Ajustar o saldo": a pessoa diz quanto tem hoje e o saldo inicial absorve a diferença;
+  // daí em diante o saldo segue somando os recebimentos e tirando os gastos pagos.
+  function ajustarSaldo(est, pessoaId, saldoHoje, hoje) {
+    const p = est.pessoas.find((x) => x.id === pessoaId);
+    if (!p) return;
+    const atual = saldosPessoas(est, hoje).get(pessoaId) || 0;
+    p.saldoInicial = arred(p.saldoInicial + (saldoHoje - atual));
+  }
+
   function pendencias(est, hoje, pessoa = 'todas') {
     return est.lancamentos
       .filter((t) => t.situacao === 'pendente' && t.tipo !== 'transferencia' && envolvePessoa(t, pessoa))
@@ -923,8 +932,28 @@
   }
 
   /*
-   * abas: [{ nome, mensal (de detectarMensal), pessoa: id | '__nova:Nome', papeis: {indice: papel}, incluir }]
+   * Anos que as abas com nome de pessoa ("Gastos Nathy") já cobrem: ano → nomes dessas abas.
+   * Uma aba sem pessoa no nome (a "Gastos" antiga, que vira "Casa") não deve repetir esses anos: a Total finanças
+   * da planilha soma só as abas das pessoas, e importar as duas coisas conta os mesmos gastos duas vezes.
+   * Aba de pessoa sem ano escrito (nem valor) é do ano escolhido para as abas sem ano.
+   */
+  function anosJaCobertos(abas, anoPadrao) {
+    const cobertos = new Map();
+    for (const a of abas) {
+      if (!a.mensal || a.mensal.resumo || a.incluir === false || !pessoaDaAba(a.nome)) continue;
+      const anos = a.mensal.anos.length ? [...a.mensal.anos, ...(a.mensal.semAno ? [anoPadrao] : [])] : [anoPadrao];
+      for (const ano of anos) {
+        if (!cobertos.has(ano)) cobertos.set(ano, []);
+        if (!cobertos.get(ano).includes(a.nome)) cobertos.get(ano).push(a.nome);
+      }
+    }
+    return cobertos;
+  }
+
+  /*
+   * abas: [{ nome, mensal (de detectarMensal), pessoa: id | '__nova:Nome', papeis: {indice: papel}, incluir, anosFora: Set(ano) }]
    * Cada valor vira um lançamento "mensal" no dia 1º do mês, na categoria com o nome da coluna.
+   * Os anos em anosFora não entram; uma aba com todos os anos de fora não entra (nem cria a pessoa).
    */
   function prepararImportacaoMensal(abas, opcoes, est, hoje) {
     const cad = cadastrosDeTrabalho(est);
@@ -933,6 +962,9 @@
     let ignorados = 0;
     for (const aba of abas) {
       if (!aba.incluir || !aba.mensal) continue;
+      const fora = aba.anosFora || new Set();
+      const anosAba = new Set(aba.mensal.entradas.map((e) => e.ano || opcoes.anoPadrao).filter(Boolean));
+      if (anosAba.size && [...anosAba].every((a) => fora.has(a))) continue;
       let pessoaId = aba.pessoa;
       if (!pessoaId || pessoaId.startsWith('__nova:')) pessoaId = cad.pessoa(pessoaId ? pessoaId.slice(7) : 'Casa');
       const pessoa = cad.pessoas.find((p) => p.id === pessoaId);
@@ -949,6 +981,7 @@
         if (!col) continue;
         const ano = e.ano || opcoes.anoPadrao;
         if (!ano) { ignorados++; continue; }
+        if (fora.has(ano)) continue;
         const chaveMes = `${ano}-${String(e.mes).padStart(2, '0')}`;
         const data = `${chaveMes}-01`;
         const cat = cad.categorias.find((c) => c.id === col.catId);
@@ -1042,11 +1075,11 @@
     ROTULO_TIPO, ROTULO_SITUACAO, MESES_NOMES, CATEGORIAS_PADRAO, PESSOAS_PADRAO, GRAFICOS_PADRAO,
     AGRUPAMENTOS, MEDIDAS, DIVISOES, PERIODOS, CAMPOS_IMPORTACAO, OUTROS,
     clonar, estadoVazio, sanear, normalizarLancamento, normalizarGrafico, categoriaPadrao, proximaCor, mapaPorId, chaveNome,
-    limitesDados, periodo, periodoAnterior, filtrar, envolvePessoa, totais, efeito, saldosPessoas, pendencias, serieMensal,
+    limitesDados, periodo, periodoAnterior, filtrar, envolvePessoa, totais, efeito, saldosPessoas, ajustarSaldo, pendencias, serieMensal,
     resumoMes, anosComDados, matrizMensal, definirValorMensal,
     configEfetiva, dadosGrafico, expandirRecorrencia,
     detectarCabecalho, sugerirMapa, sugerirModoTipo, lerTipo, lerSituacao, prepararImportacao, chaveDuplicado,
-    mesDaCelula, papelColuna, pessoaDaAba, detectarMensal, prepararImportacaoMensal,
+    mesDaCelula, papelColuna, pessoaDaAba, detectarMensal, anosJaCobertos, prepararImportacaoMensal,
     gerarExemplo, limparExemplos,
   };
 })(globalThis.LC = globalThis.LC || {});

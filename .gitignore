@@ -10,3 +10,7 @@ livro-caixa-backup-*.json
 node_modules/
 .DS_Store
 Thumbs.db
+
+# Registros dos emuladores e da linha de comando do Firebase
+*-debug.log
+.firebase/
