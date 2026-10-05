@@ -518,6 +518,13 @@
   }
 
   let arrastando = null;
+  // Redesenha sem a página pular: o painel é refeito e, por um instante, fica mais curto.
+  function renderParado() {
+    const y = window.scrollY;
+    render();
+    window.scrollTo(0, y);
+  }
+
   function renderGraficos(grade, f) {
     const est = app.estado;
     if (!grade.dataset.pronto) {
@@ -556,12 +563,12 @@
       if (aberto !== undefined) {
         const doGrupo = est.categorias.filter((x) => x.tipo === 'despesa' && (x.grupo || '') === aberto && (!g.categorias.length || g.categorias.includes(x.id))).map((x) => x.id);
         const vista = { ...g, agrupar: 'categoria', dividir: 'nenhum', categorias: doGrupo.length ? doGrupo : ['-'], corPorItem: true };
-        const fechar = () => { app.gruposAbertos.delete(g.id); render(); };
+        const fechar = () => { app.gruposAbertos.delete(g.id); renderParado(); };
         c.atualizar(vista, Dd.dadosGrafico(vista, est, f, hoje()), `${aberto || 'Sem grupo'}: ${plural(doGrupo.length, 'categoria', 'categorias')} · ${rotulo}`,
           { voltar: { rotulo: 'Todos os grupos', fn: fechar } });
       } else {
         c.atualizar(g, Dd.dadosGrafico(g, est, f, hoje()), `${G.descrever(g, est)} · ${rotulo}${g.agrupar === 'grupo' ? ' · clique num grupo para abrir' : ''}`,
-          g.agrupar === 'grupo' && g.dividir === 'nenhum' ? { aoClicar: (chave) => { app.gruposAbertos.set(g.id, chave); render(); } } : {});
+          g.agrupar === 'grupo' && g.dividir === 'nenhum' ? { aoClicar: (chave) => { app.gruposAbertos.set(g.id, chave); renderParado(); } } : {});
       }
     }
     let novo = $('#adicionar-grafico', grade);
