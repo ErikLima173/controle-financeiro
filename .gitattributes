@@ -1,0 +1,4 @@
+# Finais de linha consistentes; o atalho do Windows fica com CRLF.
+* text=auto
+*.bat text eol=crlf
+vendor/*.min.js -diff linguist-vendored

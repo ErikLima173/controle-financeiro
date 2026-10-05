@@ -1,0 +1,12 @@
+# Planilhas, extratos e backups pessoais não entram no repositório (ele é público)
+*.xlsx
+*.xlsm
+*.xls
+*.csv
+*.ofx
+*.qfx
+livro-caixa-backup-*.json
+
+node_modules/
+.DS_Store
+Thumbs.db

@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Livro-Caixa</title>
+<meta name="description" content="Controle financeiro visual no formato da planilha Gastos: planilha mensal por pessoa, painel com gráficos editáveis, orçamento e exportação para Excel.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5c4a'/%3E%3Cpath d='M9 9h14M9 14h14M9 19h14M9 24h9M13 6v21' stroke='%23fff' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="css/estilo.css">
+</head>
+<body>
+<svg xmlns="http://www.w3.org/2000/svg" hidden aria-hidden="true">
+  <symbol id="i-livro" viewBox="0 0 24 24"><path d="M5 5.5A2.5 2.5 0 0 1 7.5 3H19v14H7.5A2.5 2.5 0 0 0 5 19.5z"/><path d="M5 19.5A2.5 2.5 0 0 0 7.5 22H19v-5"/><path d="M9 7.5h6M9 11h6"/></symbol>
+  <symbol id="i-painel" viewBox="0 0 24 24"><rect x="3" y="3" width="7.5" height="9" rx="1.5"/><rect x="13.5" y="3" width="7.5" height="5" rx="1.5"/><rect x="13.5" y="11" width="7.5" height="10" rx="1.5"/><rect x="3" y="15" width="7.5" height="6" rx="1.5"/></symbol>
+  <symbol id="i-mensal" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M8 4v16M3 13.5h18M3 17h18"/></symbol>
+  <symbol id="i-pessoas" viewBox="0 0 24 24"><circle cx="9" cy="8.5" r="3.2"/><path d="M3.5 19.5a5.5 5.5 0 0 1 11 0"/><circle cx="17" cy="9.5" r="2.6"/><path d="M15.2 14.6a4.6 4.6 0 0 1 5.8 4.4"/></symbol>
+  <symbol id="i-lancamentos" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M3 14.5h18M9 4v16"/></symbol>
+  <symbol id="i-orcamento" viewBox="0 0 24 24"><path d="M12 3.5a8.5 8.5 0 1 0 8.5 8.5H12z"/><path d="M15 3.8a8.6 8.6 0 0 1 5.2 5.2H15z"/></symbol>
+  <symbol id="i-cadastros" viewBox="0 0 24 24"><path d="M3.5 12V5A1.5 1.5 0 0 1 5 3.5h7l8.5 8.5-8.5 8.5z"/><circle cx="8" cy="8" r="1.4"/></symbol>
+  <symbol id="i-importar" viewBox="0 0 24 24"><path d="M12 3.5v11M7.5 10l4.5 4.5 4.5-4.5"/><path d="M4 15v3.5A2.5 2.5 0 0 0 6.5 21h11a2.5 2.5 0 0 0 2.5-2.5V15"/></symbol>
+  <symbol id="i-exportar" viewBox="0 0 24 24"><path d="M12 14.5v-11M7.5 8L12 3.5 16.5 8"/><path d="M4 15v3.5A2.5 2.5 0 0 0 6.5 21h11a2.5 2.5 0 0 0 2.5-2.5V15"/></symbol>
+  <symbol id="i-adicionar" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-linha-nova" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="6.5" rx="1.5"/><path d="M12 14v7M8.5 17.5h7"/></symbol>
+  <symbol id="i-editar" viewBox="0 0 24 24"><path d="M4 20h4L19.2 8.8a2.8 2.8 0 0 0-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></symbol>
+  <symbol id="i-tabela" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9.5h18M3 14.8h18M10 9.5V20"/></symbol>
+  <symbol id="i-mais" viewBox="0 0 24 24"><circle cx="5.5" cy="12" r="1.4" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/><circle cx="18.5" cy="12" r="1.4" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-alca" viewBox="0 0 24 24"><g fill="currentColor" stroke="none"><circle cx="9" cy="6" r="1.4"/><circle cx="15" cy="6" r="1.4"/><circle cx="9" cy="12" r="1.4"/><circle cx="15" cy="12" r="1.4"/><circle cx="9" cy="18" r="1.4"/><circle cx="15" cy="18" r="1.4"/></g></symbol>
+  <symbol id="i-copiar" viewBox="0 0 24 24"><rect x="8.5" y="8.5" width="12" height="12" rx="2"/><path d="M15.5 8.5V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v7.5a2 2 0 0 0 2 2h2.5"/></symbol>
+  <symbol id="i-imagem" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.8"/><path d="M21 16l-5-5-9 9"/></symbol>
+  <symbol id="i-seta-cima" viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></symbol>
+  <symbol id="i-seta-baixo" viewBox="0 0 24 24"><path d="M12 5v14M6 13l6 6 6-6"/></symbol>
+  <symbol id="i-seta-dir" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-lixeira" viewBox="0 0 24 24"><path d="M4 7h16M9.5 7V4.5h5V7M6.5 7l1 13.5h9l1-13.5"/><path d="M10 11v5.5M14 11v5.5"/></symbol>
+  <symbol id="i-fechar" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+  <symbol id="i-relogio" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></symbol>
+  <symbol id="i-alerta" viewBox="0 0 24 24"><path d="M10.3 4.4L2.9 17.5A2 2 0 0 0 4.6 20.5h14.8a2 2 0 0 0 1.7-3L13.7 4.4a2 2 0 0 0-3.4 0z"/><path d="M12 9.5v4.5M12 17.2v.3"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 11v5.5M12 7.7v.3"/></symbol>
+  <symbol id="i-busca" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></symbol>
+  <symbol id="i-sol" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></symbol>
+  <symbol id="i-lua" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></symbol>
+  <symbol id="i-monitor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></symbol>
+  <symbol id="i-chevron-esq" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></symbol>
+  <symbol id="i-chevron-dir" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></symbol>
+  <symbol id="i-entrada" viewBox="0 0 24 24"><path d="M17 7L7 17M7 9v8h8"/></symbol>
+  <symbol id="i-saida" viewBox="0 0 24 24"><path d="M7 17L17 7M9 7h8v8"/></symbol>
+  <symbol id="i-transferencia" viewBox="0 0 24 24"><path d="M4 8h14M14.5 4.5L18 8l-3.5 3.5M20 16H6M9.5 12.5L6 16l3.5 3.5"/></symbol>
+  <symbol id="i-nuvem" viewBox="0 0 24 24"><path d="M7 18.5h10.5a4 4 0 0 0 .5-7.97A6 6 0 0 0 6.3 9.6 4.5 4.5 0 0 0 7 18.5z"/></symbol>
+  <symbol id="i-disco" viewBox="0 0 24 24"><path d="M5.5 3.5h10.5l4 4v11a2 2 0 0 1-2 2h-12a2 2 0 0 1-2-2v-13a2 2 0 0 1 1.5-2z"/><path d="M8 3.5v4.5h7V3.5M8 20.5v-6h8v6"/></symbol>
+  <symbol id="i-calendario" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></symbol>
+  <symbol id="i-carteira" viewBox="0 0 24 24"><path d="M4 7.5A2.5 2.5 0 0 1 6.5 5H18v3"/><path d="M4 7.5V17a2 2 0 0 0 2 2h13a1 1 0 0 0 1-1V9H6.5A2.5 2.5 0 0 1 4 7.5z"/><circle cx="16" cy="14" r="1.2" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-filtro" viewBox="0 0 24 24"><path d="M4 5h16l-6.5 7.5V19l-3-1.5v-5z"/></symbol>
+  <symbol id="i-arquivo" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></symbol>
+  <symbol id="i-excel" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M8 12h8M8 15.5h8M8 19h8M11.5 12v7"/></symbol>
+  <symbol id="i-modelo" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></symbol>
+  <symbol id="i-g-colunas" viewBox="0 0 24 24"><path d="M3.5 20.5h17"/><rect x="5.5" y="11" width="3" height="9.5" rx="1"/><rect x="10.5" y="5.5" width="3" height="15" rx="1"/><rect x="15.5" y="13.5" width="3" height="7" rx="1"/></symbol>
+  <symbol id="i-g-barras" viewBox="0 0 24 24"><path d="M3.5 3.5v17"/><rect x="3.5" y="5.5" width="10" height="3" rx="1"/><rect x="3.5" y="10.5" width="16" height="3" rx="1"/><rect x="3.5" y="15.5" width="7" height="3" rx="1"/></symbol>
+  <symbol id="i-g-linha" viewBox="0 0 24 24"><path d="M3.5 20.5h17"/><path d="M4 15.5l5-5 4 3 7-7"/></symbol>
+  <symbol id="i-g-area" viewBox="0 0 24 24"><path d="M3.5 20.5h17"/><path d="M4 16.5l5-5 4 3 7-7v13H4z" fill="currentColor" fill-opacity=".18" stroke="none"/><path d="M4 16.5l5-5 4 3 7-7"/></symbol>
+  <symbol id="i-g-rosca" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3.8"/><path d="M12 3.5v4.7M20.1 14.6l-4.5-1.4M6.2 18.2l3.1-3.4"/></symbol>
+  <symbol id="i-g-pizza" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5V12l6.6 5.3M12 12l-7.9 3.1"/></symbol>
+</svg>
+
+<div id="app" class="app" aria-busy="true">
+  <aside class="trilho" aria-label="Navegação principal">
+    <div class="marca">
+      <span class="marca-icone"><svg class="ico" aria-hidden="true"><use href="#i-livro"/></svg></span>
+      <span class="marca-textos"><span class="marca-nome">Livro-Caixa</span><span class="marca-sub">controle financeiro</span></span>
+    </div>
+    <nav class="nav" aria-label="Seções">
+      <button type="button" class="nav-item" data-vista="painel"><svg class="ico" aria-hidden="true"><use href="#i-painel"/></svg><span class="nav-rotulo">Painel</span></button>
+      <button type="button" class="nav-item" data-vista="mensal"><svg class="ico" aria-hidden="true"><use href="#i-mensal"/></svg><span class="nav-rotulo">Mensal</span></button>
+      <button type="button" class="nav-item" data-vista="lancamentos"><svg class="ico" aria-hidden="true"><use href="#i-lancamentos"/></svg><span class="nav-rotulo">Lançamentos</span></button>
+      <button type="button" class="nav-item" data-vista="orcamento"><svg class="ico" aria-hidden="true"><use href="#i-orcamento"/></svg><span class="nav-rotulo">Orçamento</span></button>
+      <button type="button" class="nav-item" data-vista="cadastros"><svg class="ico" aria-hidden="true"><use href="#i-cadastros"/></svg><span class="nav-rotulo">Cadastros</span></button>
+    </nav>
+    <div class="trilho-rodape">
+      <div id="status-salvamento" class="status-salvamento" role="status"></div>
+      <button type="button" id="acao-tema" class="nav-item nav-discreto" hidden></button>
+    </div>
+  </aside>
+
+  <main class="principal" id="principal">
+    <header class="topo">
+      <div class="topo-linha">
+        <div class="topo-titulos">
+          <h1 id="titulo-vista" class="topo-titulo">Painel</h1>
+          <p id="subtitulo-vista" class="topo-sub"></p>
+        </div>
+        <div class="topo-acoes">
+          <button type="button" id="acao-importar" class="botao"><svg class="ico" aria-hidden="true"><use href="#i-importar"/></svg><span>Importar</span></button>
+          <button type="button" id="acao-exportar" class="botao" aria-haspopup="menu" aria-expanded="false"><svg class="ico" aria-hidden="true"><use href="#i-exportar"/></svg><span>Exportar</span></button>
+          <button type="button" id="acao-novo" class="botao botao-primario" title="Novo lançamento (atalho: N)"><svg class="ico" aria-hidden="true"><use href="#i-adicionar"/></svg><span>Lançamento</span></button>
+        </div>
+      </div>
+      <div id="filtros" class="filtros" role="group" aria-label="Filtros do painel e da planilha"></div>
+    </header>
+
+    <div id="faixa" class="faixas"></div>
+
+    <div id="carregando" class="carregando">
+      <svg class="ico ico-grande" aria-hidden="true"><use href="#i-livro"/></svg>
+      <strong>Abrindo o livro-caixa…</strong>
+      <span>Os lançamentos, os gráficos do painel e o orçamento aparecem aqui em instantes.</span>
+    </div>
+
+    <section id="vista-painel" class="vista" aria-label="Painel" hidden>
+      <div id="painel-topo" class="painel-topo"></div>
+      <div class="secao-cabeca">
+        <div>
+          <h2 class="secao-titulo">Gráficos</h2>
+          <p class="secao-sub">Clique no lápis para mudar tipo, dados e cores. Arraste pela alça para mudar a ordem.</p>
+        </div>
+      </div>
+      <div id="painel-graficos" class="painel-graficos"></div>
+    </section>
+    <section id="vista-mensal" class="vista vista-mensal" aria-label="Planilha mensal" hidden></section>
+    <section id="vista-lancamentos" class="vista" aria-label="Lançamentos" hidden></section>
+    <section id="vista-orcamento" class="vista vista-orcamento" aria-label="Orçamento" hidden></section>
+    <section id="vista-cadastros" class="vista vista-cadastros" aria-label="Cadastros" hidden></section>
+  </main>
+</div>
+
+<div id="avisos" class="avisos"></div>
+
+<script src="vendor/chart.umd.min.js"></script>
+<script src="js/util.js"></script>
+<script src="js/dados.js"></script>
+<script src="js/arquivos.js"></script>
+<script src="js/armazenamento.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/graficos.js"></script>
+<script src="js/planilha.js"></script>
+<script src="js/mensal.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

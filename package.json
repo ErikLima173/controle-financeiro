@@ -1,0 +1,8 @@
+{
+  "name": "controle-financeiro",
+  "private": true,
+  "description": "Livro-Caixa: controle financeiro visual no formato da planilha Gastos",
+  "scripts": {
+    "test": "node --test testes/*.test.js"
+  }
+}
