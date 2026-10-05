@@ -1,0 +1,21 @@
+[
+ {"id":"capa","texto":"Este é o Livro-Caixa, o controle financeiro da casa. Vou te mostrar como usar, do primeiro acesso aos gráficos."},
+ {"id":"conta","texto":"No primeiro acesso, toque em Criar conta e use o seu e-mail e uma senha."},
+ {"id":"livro","texto":"Depois, crie o livro-caixa e escreva o e-mail de quem vai usar junto com você."},
+ {"id":"outra","texto":"A outra pessoa cria a conta com esse e-mail e abre o mesmo livro-caixa, em qualquer aparelho."},
+ {"id":"exemplos","texto":"Ele começa com valores de exemplo, só para você conhecer as telas."},
+ {"id":"importar","texto":"Para trazer os seus números, toque em Importar minha planilha e escolha o arquivo Gastos."},
+ {"id":"abas","texto":"O sistema reconhece cada aba, pergunta de quem é, e mostra quanto entra em cada ano."},
+ {"id":"mensal","texto":"A tela Mensal é a sua planilha: um mês por linha e uma categoria por coluna."},
+ {"id":"digitar","texto":"Clique numa célula e digite o total do mês, como no Excel. Total gasto e total restante se calculam sozinhos."},
+ {"id":"total","texto":"A aba Total finanças soma todo mundo, igual à planilha."},
+ {"id":"painel","texto":"No painel você vê o saldo de hoje, quanto sobra depois das contas do mês, e o saldo de cada pessoa."},
+ {"id":"grupos","texto":"Os gastos ficam em grupos. Clique num grupo para ver as categorias dele, e em Todos os grupos para voltar."},
+ {"id":"fixos","texto":"O gráfico de fixos e variáveis mostra, mês a mês, quanto foi conta fixa e quanto foi o resto."},
+ {"id":"editar","texto":"Todo gráfico se edita no lápis: tipo, dados, pessoas, cores e tamanho, com prévia na hora."},
+ {"id":"saldo","texto":"Em Cadastros, digite quanto cada pessoa tem hoje no banco. Daí em diante, o saldo soma o que entra e tira o que sai."},
+ {"id":"categorias","texto":"As categorias ficam separadas por grupo, e cada uma pode ser marcada como gasto fixo."},
+ {"id":"acesso","texto":"Aqui você vê quem usa o livro-caixa, adiciona e-mails e sai da conta."},
+ {"id":"exportar","texto":"E o botão Exportar gera um Excel no mesmo formato da sua planilha, com fórmulas e gráficos."},
+ {"id":"fim","texto":"Pronto! O que um digita aparece na tela do outro, em qualquer aparelho. E sem internet, fica guardado e sobe quando ela volta."}
+]

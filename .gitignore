@@ -14,3 +14,8 @@ Thumbs.db
 # Registros dos emuladores e da linha de comando do Firebase
 *-debug.log
 .firebase/
+
+# Vídeo tutorial: saídas, falas geradas e fontes baixadas
+tutorial/saida/
+tutorial/falas/
+tutorial/fontes/
