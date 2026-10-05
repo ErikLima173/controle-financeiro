@@ -60,8 +60,8 @@
     { id: 'g-fluxo', titulo: 'Recebido x gasto', tipo: 'colunas', medida: 'fluxo', agrupar: 'mes', largura: 2 },
     { id: 'g-categorias', titulo: 'Gastos por categoria', tipo: 'rosca', medida: 'despesas', agrupar: 'categoria', maxItens: 7 },
     { id: 'g-pessoas', titulo: 'Gastos por pessoa', tipo: 'colunas', medida: 'despesas', agrupar: 'mes', dividir: 'pessoa', empilhar: true },
-    { id: 'g-nathy', titulo: 'Gastos da Nathy', tipo: 'barras', medida: 'despesas', agrupar: 'categoria', pessoas: ['nathy'], corPorItem: true, maxItens: 8, altura: 'g' },
-    { id: 'g-vini', titulo: 'Gastos do Vini', tipo: 'barras', medida: 'despesas', agrupar: 'categoria', pessoas: ['vini'], corPorItem: true, maxItens: 8, altura: 'g' },
+    { id: 'g-nathy', titulo: 'Gastos Nathy', tipo: 'barras', medida: 'despesas', agrupar: 'categoria', pessoas: ['nathy'], corPorItem: true, maxItens: 8, altura: 'g' },
+    { id: 'g-vini', titulo: 'Gastos Vini', tipo: 'barras', medida: 'despesas', agrupar: 'categoria', pessoas: ['vini'], corPorItem: true, maxItens: 8, altura: 'g' },
     { id: 'g-guardado', titulo: '% guardado por mês', tipo: 'linha', medida: 'poupanca', agrupar: 'mes', meta: 0.2, largura: 2, altura: 'p' },
   ];
 
