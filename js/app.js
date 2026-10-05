@@ -410,17 +410,23 @@
     const topo = $('#painel-topo', raiz);
     esvaziar(topo);
 
-    // Herói: o "Total restante" do mês atual, por pessoa (como a aba Total finanças)
+    // Herói: o saldo de hoje (quanto cada um tem), quanto sobra depois do que está agendado no mês,
+    // e o "Total restante" do mês, como na aba Total finanças.
     const mesAtual = D.mes(hoje());
     const r = Dd.resumoMes(est, mesAtual, f.pessoa);
-    const pendentes = est.lancamentos.some((t) => D.mes(t.data) === mesAtual && t.situacao === 'pendente' && (f.pessoa === 'todas' || t.pessoa === f.pessoa));
     const anoAtual = mesAtual.slice(0, 4);
     const guardado = LC.arred(D.meses(`${anoAtual}-01`, mesAtual).reduce((s, m) => s + Dd.resumoMes(est, m, f.pessoa).restante, 0));
-    const saldos = Dd.saldosPessoas(est, hoje()); // saldo de hoje: saldo inicial + o que entrou − o que saiu (pagos)
-    const saldoTotal = LC.arred(est.pessoas.filter((p) => f.pessoa === 'todas' || p.id === f.pessoa).reduce((s, p) => s + (saldos.get(p.id) || 0), 0));
+    const saldos = Dd.saldosPessoas(est, hoje()); // saldo inicial + o que entrou − o que saiu (só o que já foi pago)
+    const fimMes = `${mesAtual}-31`; // serve para qualquer mês: as datas se comparam como texto
+    const depois = Dd.saldosPessoas(est, fimMes, { soPagos: false }); // contando também o agendado até o fim do mês
+    const doFiltro = (p) => f.pessoa === 'todas' || p.id === f.pessoa;
+    const soma = (m) => LC.arred(est.pessoas.filter(doFiltro).reduce((s, p) => s + (m.get(p.id) || 0), 0));
+    const saldoTotal = soma(saldos);
+    const saldoDepois = soma(depois);
     const lista = el('ul', { class: 'heroi-contas' });
     for (const x of Dd.resumoMes(est, mesAtual).pessoas) {
       const ativa = f.pessoa === x.pessoa.id;
+      const saldo = saldos.get(x.pessoa.id) || 0;
       const uso = x.receitas > 0 ? x.despesas / x.receitas : x.despesas > 0 ? 2 : 0;
       lista.append(el('li', null, el('button', {
         type: 'button', class: 'heroi-conta' + (ativa ? ' ativa' : ''), 'aria-pressed': ativa ? 'true' : 'false',
@@ -430,22 +436,25 @@
       el('span', { class: 'heroi-conta-linha' },
         el('span', { class: 'ponto', style: { background: LC.cor(x.pessoa.cor) } }),
         el('span', { class: 'heroi-conta-nome', text: x.pessoa.nome }),
-        el('span', { class: 'heroi-conta-valor' + (x.restante < 0 ? ' negativo' : ''), text: fmt.moeda(x.restante) })),
+        el('span', { class: 'heroi-conta-valor' + (saldo < 0 ? ' negativo' : ''), text: fmt.moeda(saldo) })),
       el('span', { class: 'heroi-conta-uso' },
-        medidor(uso, classeUso(uso), `Quanto ${x.pessoa.nome} gastou do que recebeu`),
+        medidor(uso, classeUso(uso), `Quanto ${x.pessoa.nome} gastou do que recebeu em ${nomeMes(mesAtual)}`),
         el('span', { class: 'apagado', text: x.receitas ? `gastou ${fmt.pct(x.despesas / x.receitas)} do que recebeu` : x.despesas ? `gastou ${fmt.moeda(x.despesas)} sem recebimento lançado` : 'nada lançado no mês' })),
-      el('span', { class: 'heroi-conta-saldo' }, 'Saldo hoje ',
-        el('strong', { class: (saldos.get(x.pessoa.id) || 0) < 0 ? 'negativo' : '', text: fmt.moeda(saldos.get(x.pessoa.id) || 0) })))));
+      el('span', { class: 'heroi-conta-saldo' }, `Restante de ${nomeMes(mesAtual)} `,
+        el('strong', { class: x.restante < 0 ? 'negativo' : '', text: fmt.moeda(x.restante) })))));
     }
     const nomePessoa = f.pessoa !== 'todas' ? est.pessoas.find((p) => p.id === f.pessoa)?.nome : null;
     topo.append(el('section', { class: 'cartao heroi', 'aria-labelledby': 'heroi-rotulo' },
-      el('p', { id: 'heroi-rotulo', class: 'heroi-rotulo', text: nomePessoa ? `Restante de ${nomePessoa} em ${nomeMes(mesAtual)}` : `Total restante em ${nomeMes(mesAtual)}` }),
-      el('p', { class: 'heroi-valor' + (r.restante < 0 ? ' negativo' : ''), text: fmt.moeda(r.restante) }),
-      el('p', { class: 'heroi-previsto' }, 'Recebido ', el('strong', { text: fmt.moeda(r.receitas) }), ' · gasto ', el('strong', { text: fmt.moeda(r.despesas) }),
-        pendentes ? el('span', { class: 'apagado', text: ' · contando o que está agendado' }) : null),
+      el('p', { id: 'heroi-rotulo', class: 'heroi-rotulo', text: nomePessoa ? `Saldo de ${nomePessoa} hoje` : 'Saldo de todos hoje' }),
+      el('p', { class: 'heroi-valor' + (saldoTotal < 0 ? ' negativo' : ''), text: fmt.moeda(saldoTotal) }),
+      el('p', { class: 'heroi-previsto' },
+        saldoDepois !== saldoTotal
+          ? ['Depois do que está agendado em ', nomeMes(mesAtual), ': ', el('strong', { class: saldoDepois < 0 ? 'negativo' : '', text: fmt.moeda(saldoDepois) })]
+          : 'Acerte o saldo de cada pessoa em Cadastros → Pessoas.'),
       lista,
       el('p', { class: 'heroi-guardado' },
-        nomePessoa ? `Saldo de ${nomePessoa} hoje: ` : 'Saldo de todos hoje: ', el('strong', { class: saldoTotal < 0 ? 'negativo' : '', text: fmt.moeda(saldoTotal) }),
+        `Restante de ${nomeMes(mesAtual)}: `, el('strong', { class: r.restante < 0 ? 'negativo' : '', text: fmt.moeda(r.restante) }),
+        el('span', { class: 'apagado', text: ` (recebido ${fmt.moeda(r.receitas)}, gasto ${fmt.moeda(r.despesas)})` }),
         el('br'), `Guardado em ${anoAtual} até agora: `, el('strong', { class: guardado < 0 ? 'negativo' : '', text: fmt.moeda(guardado) }))));
 
     // Indicadores do período

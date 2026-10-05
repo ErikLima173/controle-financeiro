@@ -511,6 +511,7 @@ input[type="color"] { width: 30px; height: 30px; padding: 0; border: 0; backgrou
 .heroi-conta-saldo strong { color: var(--tinta); font-variant-numeric: tabular-nums; font-weight: 600; }
 .heroi-conta-uso .medidor { height: 6px; min-width: 60px; background: rgba(127, 140, 132, 0.18); }
 .heroi-guardado { margin-top: auto; padding-top: 12px; border-top: 1px solid var(--regua-forte); font-size: 13px; color: var(--tinta-2); }
+.heroi-guardado strong, .heroi-previsto strong, .heroi-conta-saldo strong { white-space: nowrap; }
 .heroi-guardado strong { color: var(--tinta); font-variant-numeric: tabular-nums; }
 
 .indicadores {
