@@ -28,6 +28,7 @@
     erroSalvar: '',
     errosNuvem: 0,
     cartoes: new Map(),
+    gruposAbertos: new Map(), // gráfico por grupo → grupo aberto (mostrando as categorias)
     planilha: null,
     mensal: null,
   };
@@ -550,7 +551,18 @@
       let c = app.cartoes.get(g.id);
       if (!c) { c = G.criarCartao(g, acoesCartao); app.cartoes.set(g.id, c); }
       grade.append(c.el);
-      c.atualizar(g, Dd.dadosGrafico(g, est, f, hoje()), `${G.descrever(g, est)} · ${rotulo}`);
+      // Gráfico por grupo: clicar num grupo mostra as categorias dele no mesmo cartão.
+      const aberto = g.agrupar === 'grupo' ? app.gruposAbertos.get(g.id) : undefined;
+      if (aberto !== undefined) {
+        const doGrupo = est.categorias.filter((x) => x.tipo === 'despesa' && (x.grupo || '') === aberto && (!g.categorias.length || g.categorias.includes(x.id))).map((x) => x.id);
+        const vista = { ...g, agrupar: 'categoria', dividir: 'nenhum', categorias: doGrupo.length ? doGrupo : ['-'], corPorItem: true };
+        const fechar = () => { app.gruposAbertos.delete(g.id); render(); };
+        c.atualizar(vista, Dd.dadosGrafico(vista, est, f, hoje()), `${aberto || 'Sem grupo'}: ${plural(doGrupo.length, 'categoria', 'categorias')} · ${rotulo}`,
+          { voltar: { rotulo: 'Todos os grupos', fn: fechar } });
+      } else {
+        c.atualizar(g, Dd.dadosGrafico(g, est, f, hoje()), `${G.descrever(g, est)} · ${rotulo}${g.agrupar === 'grupo' ? ' · clique num grupo para abrir' : ''}`,
+          g.agrupar === 'grupo' && g.dividir === 'nenhum' ? { aoClicar: (chave) => { app.gruposAbertos.set(g.id, chave); render(); } } : {});
+      }
     }
     let novo = $('#adicionar-grafico', grade);
     if (!novo) {
@@ -754,16 +766,44 @@
 
     const listaCats = el('ul', { class: 'cadastro-lista' },
       cabecalhoCadastro(tipo === 'despesa' ? ['Nome', 'Orçamento mensal', 'Lançamentos'] : ['Nome', 'Lançamentos'], tipo === 'despesa' ? '' : ' sem-valor'));
-    for (const c of est.categorias.filter((x) => x.tipo === tipo)) {
+    // Gastos aparecem por grupo (Moradia, Pets…), com o grupo e o "fixo" editáveis em cada categoria.
+    const grupos = Dd.gruposDe(est);
+    const daLista = est.categorias.filter((x) => x.tipo === tipo);
+    const ordenadas = tipo === 'despesa'
+      ? [...daLista].sort((a, b) => ((grupos.indexOf(a.grupo) + 1 || 99) - (grupos.indexOf(b.grupo) + 1 || 99)))
+      : daLista;
+    let grupoAnterior = null;
+    for (const c of ordenadas) {
+      const mudar = (fn) => alterar((e) => { const x = e.categorias.find((y) => y.id === c.id); if (x) fn(x); });
+      if (tipo === 'despesa' && c.grupo !== grupoAnterior) {
+        grupoAnterior = c.grupo;
+        const doGrupo = daLista.filter((x) => x.grupo === c.grupo);
+        listaCats.append(el('li', { class: 'cadastro-grupo' },
+          el('span', { class: 'ponto', style: { background: LC.cor(c.grupo ? 'p' + ((grupos.indexOf(c.grupo) % 8) + 1) : 'neutro') } }),
+          el('strong', { text: c.grupo || 'Sem grupo' }),
+          el('span', { class: 'ajuda', text: `${plural(doGrupo.length, 'categoria', 'categorias')} · ${plural(doGrupo.filter((x) => x.fixo).length, 'fixa', 'fixas')}` })));
+      }
+      let abaixo = null;
+      if (tipo === 'despesa') {
+        const grupo = el('input', { id: 'grupo-' + c.id, class: 'entrada entrada-pequena', type: 'text', list: 'lista-grupos', maxlength: '40', value: c.grupo, placeholder: 'Sem grupo', autocomplete: 'off', 'aria-label': `Grupo de ${c.nome}` });
+        grupo.addEventListener('change', () => { const v = grupo.value.trim(); if (v !== c.grupo) mudar((x) => { x.grupo = v; }); });
+        grupo.addEventListener('keydown', (e) => { if (e.key === 'Enter') grupo.blur(); });
+        const fixo = el('input', { id: 'fixo-' + c.id, type: 'checkbox', checked: c.fixo });
+        fixo.addEventListener('change', () => mudar((x) => { x.fixo = fixo.checked; }));
+        abaixo = el('div', { class: 'cadastro-abaixo' },
+          el('label', { class: 'cadastro-grupo-campo', for: 'grupo-' + c.id }, el('span', { class: 'ajuda', text: 'Grupo' }), grupo),
+          el('label', { class: 'cadastro-fixo', title: 'Conta que se repete todo mês (aluguel, internet, mensalidades)' }, fixo, el('span', { text: 'Gasto fixo' })));
+      }
       listaCats.append(linhaCadastro({
-        item: c, n: uso.get(c.id) || 0, rotulo: 'categoria',
+        item: c, n: uso.get(c.id) || 0, rotulo: 'categoria', abaixo,
         valor: tipo === 'despesa' ? { campo: 'orcamento', rotulo: 'Orçamento mensal', dica: 'sem' } : null,
-        aoMudar: (fn) => alterar((e) => { const x = e.categorias.find((y) => y.id === c.id); if (x) fn(x); }),
+        aoMudar: mudar,
         aoExcluir: () => excluirCategoria(c.id),
       }));
     }
+    if (tipo === 'despesa') listaCats.append(el('datalist', { id: 'lista-grupos' }, grupos.map((g) => el('option', { value: g }))));
     const novaCategoria = () => {
-      const c = { id: LC.novoId('c'), nome: tipo === 'despesa' ? 'Nova categoria' : 'Novo recebimento', tipo, cor: Dd.proximaCor(est.categorias.filter((x) => x.tipo === tipo)), orcamento: 0 };
+      const c = { id: LC.novoId('c'), nome: tipo === 'despesa' ? 'Nova categoria' : 'Novo recebimento', tipo, cor: Dd.proximaCor(est.categorias.filter((x) => x.tipo === tipo)), orcamento: 0, grupo: '', fixo: false };
       alterar((e) => { e.categorias.push(c); });
       requestAnimationFrame(() => { const i = document.getElementById('nome-' + c.id); if (i) { i.focus(); i.select(); } });
     };
@@ -902,7 +942,7 @@
     return el('li', { class: 'cadastro-linha cadastro-cabeca-lista' + classe, 'aria-hidden': 'true' }, el('span'), rotulos.map((r) => el('span', { text: r })), el('span'));
   }
 
-  function linhaCadastro({ item, n, rotulo, valor, extra, aoMudar, aoExcluir }) {
+  function linhaCadastro({ item, n, rotulo, valor, extra, abaixo, aoMudar, aoExcluir }) {
     const cor = el('button', { type: 'button', class: 'amostra-botao', 'aria-haspopup': 'dialog', 'aria-expanded': 'false', title: 'Mudar a cor', 'aria-label': `Mudar a cor de ${item.nome}` },
       el('span', { class: 'amostra', style: { background: LC.cor(item.cor) } }));
     cor.addEventListener('click', () => LC.UI.escolherCor(cor, item.cor, (ref) => aoMudar((x) => { x.cor = ref || 'neutro'; })));
@@ -929,7 +969,8 @@
     const classe = rotulo === 'pessoa' ? ' pessoa' : valor ? '' : ' sem-valor';
     return el('li', { class: 'cadastro-linha' + classe }, cor, nome, entradas, extra || null,
       rotulo === 'pessoa' ? null : el('span', { class: 'cadastro-uso', text: String(n) }),
-      el('button', { type: 'button', class: 'botao-icone', title: `Excluir ${rotulo} (${plural(n, 'lançamento', 'lançamentos')})`, 'aria-label': `Excluir ${item.nome}`, onclick: aoExcluir }, icone('lixeira')));
+      el('button', { type: 'button', class: 'botao-icone', title: `Excluir ${rotulo} (${plural(n, 'lançamento', 'lançamentos')})`, 'aria-label': `Excluir ${item.nome}`, onclick: aoExcluir }, icone('lixeira')),
+      abaixo || null);
   }
 
   async function excluirCategoria(id) {

@@ -31,7 +31,7 @@
       if (!meses.has(k)) meses.set(k, []);
       meses.get(k).push(t);
     }
-    return { config: { versao: 2, pessoas: est.pessoas, categorias: est.categorias, graficos: est.graficos }, meses };
+    return { config: { versao: 2, pessoas: est.pessoas, categorias: est.categorias, graficos: est.graficos, novidades: est.novidades || [] }, meses };
   }
 
   // ── Navegador ────────────────────────────────────────────────────────────

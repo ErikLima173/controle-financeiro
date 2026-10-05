@@ -26,28 +26,47 @@
   // As colunas das abas "Gastos Nathy" e "Gastos vini". Cores: as maiores categorias da casa nunca repetem
   // (Aluguel, Cartão, Comida, Gastos extras, Compras, Gasolina, Faculdade, Seguro Carro); as menores reaproveitam.
   const CATEGORIAS_PADRAO = [
-    { id: 'cartao', nome: 'Cartão', tipo: 'despesa', cor: 'p2' },
-    { id: 'academia', nome: 'Academia', tipo: 'despesa', cor: 'p6' },
-    { id: 'oculos', nome: 'Óculos', tipo: 'despesa', cor: 'p7' },
-    { id: 'maquina', nome: 'Máquina', tipo: 'despesa', cor: 'p1' },
-    { id: 'pc', nome: 'PC', tipo: 'despesa', cor: 'p8' },
-    { id: 'areia-gatos', nome: 'Areia Gatos', tipo: 'despesa', cor: 'p4' },
-    { id: 'racao-athena', nome: 'Ração Athena', tipo: 'despesa', cor: 'p7' },
-    { id: 'racao-gatos', nome: 'Ração Gatos', tipo: 'despesa', cor: 'p4' },
-    { id: 'comida', nome: 'Comida', tipo: 'despesa', cor: 'p3' },
-    { id: 'compras', nome: 'Compras', tipo: 'despesa', cor: 'p5' },
-    { id: 'jogos', nome: 'Jogos', tipo: 'despesa', cor: 'p8' },
-    { id: 'gasolina', nome: 'Gasolina', tipo: 'despesa', cor: 'p6' },
-    { id: 'outros', nome: 'Outros', tipo: 'despesa', cor: 'neutro' },
-    { id: 'faculdade', nome: 'Faculdade', tipo: 'despesa', cor: 'p7' },
-    { id: 'internet', nome: 'Internet', tipo: 'despesa', cor: 'p3' },
-    { id: 'seguro-carro', nome: 'Seguro Carro', tipo: 'despesa', cor: 'p8' },
-    { id: 'aluguel', nome: 'Aluguel', tipo: 'despesa', cor: 'p1' },
-    { id: 'agua', nome: 'Água', tipo: 'despesa', cor: 'p5' },
-    { id: 'gastos-extras', nome: 'Gastos extras', tipo: 'despesa', cor: 'p4' },
+    { id: 'cartao', nome: 'Cartão', tipo: 'despesa', cor: 'p2', grupo: 'Cartão e outros', fixo: false },
+    { id: 'academia', nome: 'Academia', tipo: 'despesa', cor: 'p6', grupo: 'Saúde e educação', fixo: true },
+    { id: 'oculos', nome: 'Óculos', tipo: 'despesa', cor: 'p7', grupo: 'Saúde e educação', fixo: false },
+    { id: 'maquina', nome: 'Máquina', tipo: 'despesa', cor: 'p1', grupo: 'Compras e lazer', fixo: false },
+    { id: 'pc', nome: 'PC', tipo: 'despesa', cor: 'p8', grupo: 'Compras e lazer', fixo: false },
+    { id: 'areia-gatos', nome: 'Areia Gatos', tipo: 'despesa', cor: 'p4', grupo: 'Pets', fixo: false },
+    { id: 'racao-athena', nome: 'Ração Athena', tipo: 'despesa', cor: 'p7', grupo: 'Pets', fixo: false },
+    { id: 'racao-gatos', nome: 'Ração Gatos', tipo: 'despesa', cor: 'p4', grupo: 'Pets', fixo: false },
+    { id: 'comida', nome: 'Comida', tipo: 'despesa', cor: 'p3', grupo: 'Alimentação', fixo: false },
+    { id: 'compras', nome: 'Compras', tipo: 'despesa', cor: 'p5', grupo: 'Compras e lazer', fixo: false },
+    { id: 'jogos', nome: 'Jogos', tipo: 'despesa', cor: 'p8', grupo: 'Compras e lazer', fixo: false },
+    { id: 'gasolina', nome: 'Gasolina', tipo: 'despesa', cor: 'p6', grupo: 'Transporte', fixo: false },
+    { id: 'outros', nome: 'Outros', tipo: 'despesa', cor: 'neutro', grupo: 'Cartão e outros', fixo: false },
+    { id: 'faculdade', nome: 'Faculdade', tipo: 'despesa', cor: 'p7', grupo: 'Saúde e educação', fixo: true },
+    { id: 'internet', nome: 'Internet', tipo: 'despesa', cor: 'p3', grupo: 'Moradia', fixo: true },
+    { id: 'seguro-carro', nome: 'Seguro Carro', tipo: 'despesa', cor: 'p8', grupo: 'Transporte', fixo: true },
+    { id: 'aluguel', nome: 'Aluguel', tipo: 'despesa', cor: 'p1', grupo: 'Moradia', fixo: true },
+    { id: 'agua', nome: 'Água', tipo: 'despesa', cor: 'p5', grupo: 'Moradia', fixo: true },
+    { id: 'gastos-extras', nome: 'Gastos extras', tipo: 'despesa', cor: 'p4', grupo: 'Cartão e outros', fixo: false },
     { id: 'salario', nome: 'Salário', tipo: 'receita', cor: 'p1' },
     { id: 'outros-recebimentos', nome: 'Outros recebimentos', tipo: 'receita', cor: 'neutro' },
-  ].map((c) => ({ orcamento: 0, ...c }));
+  ].map((c) => ({ orcamento: 0, grupo: '', fixo: false, ...c }));
+
+  // Grupo e "fixo" sugeridos pelo nome, para categorias que vieram da planilha ou de versões antigas.
+  // Fixo: conta que se repete todo mês com valor parecido (aluguel, internet, mensalidades, parcelas).
+  const SUGESTOES_GRUPO = [
+    [/aluguel|condominio|agua|luz|energia|internet|gas\b|iptu|casa/, 'Moradia', /aluguel|condominio|agua|luz|energia|internet|iptu/],
+    [/racao|areia|pet|gato|cachorro|porquinho|veterinari/, 'Pets', null],
+    [/gasolina|combustivel|uber|onibus|seguro carro|seguro|carro|ipva|estacionamento/, 'Transporte', /seguro|ipva/],
+    [/comida|mercado|restaurante|ifood|lanche|padaria|aliment/, 'Alimentação', null],
+    [/academia|farmacia|medic|saude|oculos|dentista|faculdade|escola|curso|plano de saude/, 'Saúde e educação', /academia|faculdade|escola|curso|plano/],
+    [/youtube|netflix|spotify|tvbox|tv box|streaming|assinatura|parcela|jogo|pc|maquina|compra|lazer|viagem/, 'Compras e lazer', /youtube|netflix|spotify|tvbox|tv box|streaming|assinatura|parcela/],
+    [/cartao|extra|outro/, 'Cartão e outros', null],
+  ];
+
+  function sugerirGrupo(nome, tipo) {
+    if (tipo === 'receita') return { grupo: '', fixo: false };
+    const n = LC.dobrar(nome);
+    for (const [padrao, grupo, fixo] of SUGESTOES_GRUPO) if (padrao.test(n)) return { grupo, fixo: !!(fixo && fixo.test(n)) };
+    return { grupo: 'Cartão e outros', fixo: false };
+  }
 
   const PESSOAS_PADRAO = [
     { id: 'nathy', nome: 'Nathy', cor: 'p1', saldoInicial: 0,
@@ -59,11 +78,15 @@
   const GRAFICOS_PADRAO = [
     { id: 'g-fluxo', titulo: 'Recebido x gasto', tipo: 'colunas', medida: 'fluxo', agrupar: 'mes', largura: 2 },
     { id: 'g-categorias', titulo: 'Gastos por categoria', tipo: 'rosca', medida: 'despesas', agrupar: 'categoria', maxItens: 7 },
+    { id: 'g-grupos', titulo: 'Gastos por grupo', tipo: 'rosca', medida: 'despesas', agrupar: 'grupo' },
+    { id: 'g-fixos', titulo: 'Fixos x variáveis', tipo: 'colunas', medida: 'despesas', agrupar: 'mes', dividir: 'fixo', empilhar: true },
     { id: 'g-pessoas', titulo: 'Gastos por pessoa', tipo: 'colunas', medida: 'despesas', agrupar: 'mes', dividir: 'pessoa', empilhar: true },
     { id: 'g-nathy', titulo: 'Gastos Nathy', tipo: 'barras', medida: 'despesas', agrupar: 'categoria', pessoas: ['nathy'], corPorItem: true, maxItens: 8, altura: 'g' },
     { id: 'g-vini', titulo: 'Gastos Vini', tipo: 'barras', medida: 'despesas', agrupar: 'categoria', pessoas: ['vini'], corPorItem: true, maxItens: 8, altura: 'g' },
     { id: 'g-guardado', titulo: '% guardado por mês', tipo: 'linha', medida: 'poupanca', agrupar: 'mes', meta: 0.2, largura: 2, altura: 'p' },
   ];
+
+  const NOVIDADES = [{ id: 'grupos', graficos: ['g-grupos', 'g-fixos'], depoisDe: 'g-categorias' }];
 
   // Opções do editor de gráficos. "tempo" = eixo contínuo (meses sem lançamento aparecem zerados).
   const AGRUPAMENTOS = {
@@ -72,6 +95,8 @@
     dia: { nome: 'Dia', tempo: true },
     diaSemana: { nome: 'Dia da semana' },
     categoria: { nome: 'Categoria' },
+    grupo: { nome: 'Grupo de categorias' },
+    fixo: { nome: 'Fixo ou variável' },
     pessoa: { nome: 'Pessoa' },
     tipo: { nome: 'Tipo (recebimento ou gasto)' },
     situacao: { nome: 'Situação (pago ou pendente)' },
@@ -89,7 +114,7 @@
     quantidade: { nome: 'Quantidade de lançamentos', unidade: 'n' },
   };
 
-  const DIVISOES = { nenhum: 'Nenhuma', categoria: 'Categoria', pessoa: 'Pessoa', tipo: 'Tipo', situacao: 'Situação' };
+  const DIVISOES = { nenhum: 'Nenhuma', categoria: 'Categoria', grupo: 'Grupo', fixo: 'Fixo ou variável', pessoa: 'Pessoa', tipo: 'Tipo', situacao: 'Situação' };
 
   const PERIODOS = {
     mes: 'Este mês',
@@ -113,6 +138,7 @@
       pessoas: clonar(PESSOAS_PADRAO),
       categorias: clonar(CATEGORIAS_PADRAO),
       graficos: GRAFICOS_PADRAO.map(normalizarGrafico),
+      novidades: NOVIDADES.map((n) => n.id),
       lancamentos: [],
     };
   }
@@ -137,6 +163,16 @@
     return n;
   }
 
+  function grupoEFixo(c) {
+    const tipo = c.tipo === 'receita' ? 'receita' : 'despesa';
+    if (tipo === 'receita') return { grupo: '', fixo: false };
+    const sug = (typeof c.grupo !== 'string' || typeof c.fixo !== 'boolean') ? sugerirGrupo(String(c.nome), tipo) : null;
+    return {
+      grupo: typeof c.grupo === 'string' ? c.grupo.trim().slice(0, 40) : sug.grupo,
+      fixo: typeof c.fixo === 'boolean' ? c.fixo : sug.fixo,
+    };
+  }
+
   // Aceita qualquer coisa que pareça um estado (backup, nuvem, localStorage) e devolve um válido.
   function sanear(bruto) {
     const base = estadoVazio();
@@ -155,6 +191,7 @@
       tipo: c.tipo === 'receita' ? 'receita' : 'despesa',
       cor: typeof c.cor === 'string' ? c.cor : 'neutro',
       orcamento: Math.max(0, arred(c.orcamento)),
+      ...grupoEFixo(c),
     }));
     const idsCat = new Set(est.categorias.map((c) => c.id));
     est.pessoas = est.pessoas.filter((p) => p && p.nome).map((p) => ({
@@ -166,6 +203,16 @@
     }));
     if (!est.pessoas.length) est.pessoas = base.pessoas;
     est.graficos = est.graficos.filter((g) => g && typeof g === 'object').map(normalizarGrafico);
+    // Gráficos de recursos novos entram uma vez nos livros-caixa que já existiam.
+    const vistas = new Set(Array.isArray(bruto.novidades) ? bruto.novidades.map(String) : Array.isArray(bruto.graficos) ? [] : NOVIDADES.map((n) => n.id));
+    for (const n of NOVIDADES) {
+      if (vistas.has(n.id)) continue;
+      const faltam = GRAFICOS_PADRAO.filter((g) => n.graficos.includes(g.id) && !est.graficos.some((x) => x.id === g.id)).map(normalizarGrafico);
+      const i = est.graficos.findIndex((g) => g.id === n.depoisDe);
+      est.graficos.splice(i >= 0 ? i + 1 : est.graficos.length, 0, ...faltam);
+      vistas.add(n.id);
+    }
+    est.novidades = [...vistas];
     est.lancamentos = est.lancamentos.filter((t) => t && D.valida(t.data) && Number.isFinite(+t.valor))
       .map(normalizarLancamento);
     const pessoas = new Set(est.pessoas.map((p) => p.id));
@@ -458,8 +505,10 @@
     return lista;
   }
 
-  function chaveGrupo(agrupar, t) {
+  function chaveGrupo(agrupar, t, cats) {
     switch (agrupar) {
+      case 'grupo': return (cats && cats.get(t.categoria)?.grupo) || '';
+      case 'fixo': return cats && cats.get(t.categoria)?.fixo ? 'fixo' : 'variavel';
       case 'mes': return D.mes(t.data);
       case 'semana': return D.inicioSemana(t.data);
       case 'dia': return t.data;
@@ -472,6 +521,13 @@
     }
   }
 
+  // Grupos em ordem de aparição nas categorias; cada um fica com uma cor fixa da paleta.
+  const gruposDe = (est) => [...new Set(est.categorias.filter((c) => c.tipo === 'despesa' && c.grupo).map((c) => c.grupo))];
+  function corDoGrupo(est, nome) {
+    const i = gruposDe(est).indexOf(nome);
+    return i < 0 ? 'neutro' : 'p' + ((i % 8) + 1);
+  }
+
   function descreverItem(dim, chave, est) {
     if (chave === OUTROS) return { rotulo: 'Outros', cor: 'neutro' };
     switch (dim) {
@@ -479,6 +535,8 @@
       case 'semana': case 'dia': return { rotulo: LC.fmt.dataCurta(chave) };
       case 'diaSemana': return { rotulo: LC.fmt.diaSemana(+chave) };
       case 'categoria': { const c = est.categorias.find((x) => x.id === chave); return { rotulo: c ? c.nome : 'Sem categoria', cor: c ? c.cor : 'neutro' }; }
+      case 'grupo': return { rotulo: chave || 'Sem grupo', cor: chave ? corDoGrupo(est, chave) : 'neutro' };
+      case 'fixo': return chave === 'fixo' ? { rotulo: 'Fixos', cor: 'p1' } : { rotulo: 'Variáveis', cor: 'p2' };
       case 'pessoa': { const p = est.pessoas.find((x) => x.id === chave); return { rotulo: p ? p.nome : 'Sem pessoa', cor: p ? p.cor : 'neutro' }; }
       case 'tipo': return chave === 'receita' ? { rotulo: 'Recebido', cor: 'p1' } : { rotulo: 'Gasto', cor: 'p2' };
       case 'situacao': return chave === 'pago' ? { rotulo: 'Pagos', cor: 'p3' } : { rotulo: 'Pendentes', cor: 'p4' };
@@ -502,6 +560,7 @@
     const cfg = configEfetiva(cfgBruta);
     const medida = MEDIDAS[cfg.medida];
     const ag = AGRUPAMENTOS[cfg.agrupar];
+    const cats = mapaPorId(est.categorias);
     const restritas = cfg.categorias.length ? new Set(cfg.categorias) : null;
     const idsPessoas = new Set(est.pessoas.map((p) => p.id));
     const soPessoas = cfg.pessoas.filter((id) => idsPessoas.has(id));
@@ -526,7 +585,7 @@
       chaves = est.categorias.filter((c) => c.tipo === 'despesa' && (!restritas || restritas.has(c.id))
         && (c.orcamento > 0 || gasto.has(c.id))).map((c) => c.id);
     } else {
-      chaves = [...new Set(lista.map((t) => chaveGrupo(cfg.agrupar, t)))];
+      chaves = [...new Set(lista.map((t) => chaveGrupo(cfg.agrupar, t, cats)))];
     }
     const posicao = new Map(chaves.map((k, i) => [k, i]));
     const zeros = () => chaves.map(() => 0);
@@ -536,7 +595,7 @@
       const series = definicoes.map((d) => ({ ...d, valores: zeros() }));
       const porChave = new Map(series.map((s) => [s.chave, s]));
       for (const t of lista) {
-        const i = posicao.get(chaveGrupo(cfg.agrupar, t));
+        const i = posicao.get(chaveGrupo(cfg.agrupar, t, cats));
         if (i === undefined) continue;
         for (const [chave, v] of filtroSerie(t)) {
           const s = porChave.get(chave);
@@ -583,7 +642,7 @@
         if (!passa(t)) continue;
         if (primeiro && t.data < (cfg.agrupar === 'mes' ? D.inicioDoMes(primeiro) : primeiro)) { saldo += efeito(t, grupo); continue; }
         if (t.data > f.fim) continue;
-        const i = posicao.get(chaveGrupo(cfg.agrupar, t));
+        const i = posicao.get(chaveGrupo(cfg.agrupar, t, cats));
         if (i !== undefined) movimentos[i] += efeito(t, grupo);
       }
       const valores = movimentos.map((m) => (saldo += m));
@@ -596,9 +655,9 @@
     } else {
       const valor = cfg.medida === 'quantidade' ? () => 1 : cfg.medida === 'resultado' ? sinal : (t) => t.valor;
       if (cfg.dividir !== 'nenhum') {
-        const chavesSerie = [...new Set(lista.map((t) => chaveGrupo(cfg.dividir, t)))];
+        const chavesSerie = [...new Set(lista.map((t) => chaveGrupo(cfg.dividir, t, cats)))];
         series = somar(chavesSerie.map((k) => ({ chave: k, nome: descreverItem(cfg.dividir, k, est).rotulo, cor: descreverItem(cfg.dividir, k, est).cor })),
-          (t) => [[chaveGrupo(cfg.dividir, t), valor(t)]]);
+          (t) => [[chaveGrupo(cfg.dividir, t, cats), valor(t)]]);
         series.sort((a, b) => soma(b.valores) - soma(a.valores));
         if (cfg.maxItens && series.length > cfg.maxItens) {
           const resto = series.splice(cfg.maxItens);
@@ -1074,7 +1133,7 @@
   LC.Dados = {
     ROTULO_TIPO, ROTULO_SITUACAO, MESES_NOMES, CATEGORIAS_PADRAO, PESSOAS_PADRAO, GRAFICOS_PADRAO,
     AGRUPAMENTOS, MEDIDAS, DIVISOES, PERIODOS, CAMPOS_IMPORTACAO, OUTROS,
-    clonar, estadoVazio, sanear, normalizarLancamento, normalizarGrafico, categoriaPadrao, proximaCor, mapaPorId, chaveNome,
+    clonar, estadoVazio, sanear, sugerirGrupo, gruposDe, normalizarLancamento, normalizarGrafico, categoriaPadrao, proximaCor, mapaPorId, chaveNome,
     limitesDados, periodo, periodoAnterior, filtrar, envolvePessoa, totais, efeito, saldosPessoas, ajustarSaldo, pendencias, serieMensal,
     resumoMes, anosComDados, matrizMensal, definirValorMensal,
     configEfetiva, dadosGrafico, expandirRecorrencia,

@@ -26,6 +26,8 @@
   const MODELOS = [
     { titulo: 'Recebido x gasto', tipo: 'colunas', medida: 'fluxo', agrupar: 'mes', descricao: 'Como a aba Total finanças: recebido, gasto e restante' },
     { titulo: 'Gastos por categoria', tipo: 'rosca', medida: 'despesas', agrupar: 'categoria', maxItens: 6, descricao: 'Para onde vai o dinheiro' },
+    { titulo: 'Gastos por grupo', tipo: 'rosca', medida: 'despesas', agrupar: 'grupo', descricao: 'Moradia, pets, transporte… Clique num grupo para ver as categorias dele' },
+    { titulo: 'Fixos x variáveis', tipo: 'colunas', medida: 'despesas', agrupar: 'mes', dividir: 'fixo', empilhar: true, descricao: 'Contas que se repetem todo mês e o resto, mês a mês' },
     { titulo: 'Gastos por pessoa', tipo: 'colunas', medida: 'despesas', agrupar: 'mes', dividir: 'pessoa', empilhar: true, descricao: 'Quanto cada um gastou, mês a mês' },
     { titulo: 'Gastos de uma pessoa', tipo: 'barras', medida: 'despesas', agrupar: 'categoria', corPorItem: true, maxItens: 8, altura: 'g', descricao: 'Escolha a pessoa em "Só estas pessoas"' },
     { titulo: 'Quanto sobrou por mês', tipo: 'colunas', medida: 'resultado', agrupar: 'mes', dividir: 'pessoa', descricao: 'Total restante de cada pessoa' },
@@ -207,7 +209,21 @@
 
   // ── Configuração do Chart.js ─────────────────────────────────────────────
 
-  function montarConfig(dados, { animar = false, dica = null } = {}) {
+  function montarConfig(dados, opcoes = {}) {
+    const config = montarConfigBase(dados, opcoes);
+    // Clicar numa fatia ou barra abre o item (por exemplo, as categorias de um grupo).
+    if (opcoes.aoClicar) {
+      config.options.onClick = (evento, itens) => {
+        if (!itens.length) return;
+        const chave = dados.chaves[itens[0].index];
+        if (chave !== undefined) opcoes.aoClicar(chave);
+      };
+      config.options.onHover = (evento, itens) => { evento.native.target.style.cursor = itens.length ? 'pointer' : ''; };
+    }
+    return config;
+  }
+
+  function montarConfigBase(dados, { animar = false, dica = null } = {}) {
     const { cfg } = dados;
     const t = tema();
     const longo = formatador(dados.unidade, false), curto = formatador(dados.unidade, true);
@@ -454,6 +470,7 @@
     const leg = el('div', { class: 'cg-legenda', hidden: true });
     const tab = el('div', { class: 'cg-tabela', hidden: true });
     const titulo = el('h3', { class: 'cg-titulo' });
+    const voltar = el('button', { type: 'button', class: 'botao botao-pequeno botao-fantasma cg-voltar', hidden: true }, icone('chevron-esq', 'ico ico-mini'), 'Todos os grupos');
     const sub = el('p', { class: 'cg-sub' });
     const botaoTabela = el('button', { type: 'button', class: 'botao-icone', title: 'Ver os dados em tabela', 'aria-label': 'Ver os dados em tabela', 'aria-pressed': 'false' }, icone('tabela'));
     const botaoMais = el('button', { type: 'button', class: 'botao-icone', title: 'Mais opções', 'aria-label': 'Mais opções do gráfico', 'aria-haspopup': 'menu', 'aria-expanded': 'false' }, icone('mais'));
@@ -461,7 +478,7 @@
     const raiz = el('article', { class: 'cartao cg', dataset: { id: cfg.id } },
       el('header', { class: 'cg-cabeca' },
         alca,
-        el('div', { class: 'cg-titulos' }, titulo, sub),
+        el('div', { class: 'cg-titulos' }, voltar, titulo, sub),
         el('div', { class: 'cg-acoes' },
           el('button', { type: 'button', class: 'botao-icone', title: 'Editar gráfico', 'aria-label': 'Editar gráfico', onclick: () => acoes.editar(cfg.id) }, icone('editar')),
           botaoTabela, botaoMais)),
@@ -500,7 +517,13 @@
       if (e.key === 'ArrowDown' || e.key === 'ArrowRight') { e.preventDefault(); acoes.mover(cfg.id, 1); }
     });
 
-    function atualizar(novaCfg, dados, subtitulo) {
+    // extra.aoClicar: o que fazer ao clicar num item; extra.voltar: { rotulo, fn } para sair do item aberto.
+    let aoVoltar = null;
+    voltar.addEventListener('click', () => { if (aoVoltar) aoVoltar(); });
+    function atualizar(novaCfg, dados, subtitulo, extra = {}) {
+      aoVoltar = extra.voltar ? extra.voltar.fn : null;
+      voltar.hidden = !extra.voltar;
+      if (extra.voltar) voltar.lastChild.textContent = extra.voltar.rotulo;
       cfg = novaCfg;
       dadosAtuais = dados;
       raiz.dataset.largura = String(cfg.largura);
@@ -515,7 +538,7 @@
       canvas.hidden = dados.vazio;
       if (!dados.vazio && typeof Chart !== 'undefined') {
         registrar();
-        chart = new Chart(canvas, montarConfig(dados, { animar: primeiro, dica }));
+        chart = new Chart(canvas, montarConfig(dados, { animar: primeiro, dica, aoClicar: extra.aoClicar }));
         primeiro = false;
       }
       legenda(leg, chart, dados);
@@ -664,7 +687,7 @@
       const medidas = LC.UI.selecao('ed-medida', Object.entries(Dd.MEDIDAS).map(([v, m]) => [v, m.nome]), r.medida, (v) => mudar('medida', v, { reconstruir: true }));
       const agrup = LC.UI.selecao('ed-agrupar', [
         { grupo: 'Tempo', itens: [['mes', 'Mês'], ['semana', 'Semana'], ['dia', 'Dia'], ['diaSemana', 'Dia da semana']] },
-        { grupo: 'Cadastros', itens: [['categoria', 'Categoria'], ['pessoa', 'Pessoa'], ['tipo', 'Tipo (recebimento ou gasto)'], ['situacao', 'Situação (pago ou pendente)']] },
+        { grupo: 'Cadastros', itens: [['categoria', 'Categoria'], ['grupo', 'Grupo de categorias'], ['fixo', 'Fixo ou variável'], ['pessoa', 'Pessoa'], ['tipo', 'Tipo (recebimento ou gasto)'], ['situacao', 'Situação (pago ou pendente)']] },
       ], r.agrupar, (v) => mudar('agrupar', v, { reconstruir: true }));
       const dividir = LC.UI.selecao('ed-dividir', Object.entries(Dd.DIVISOES).map(([v, n]) => [v, n]), r.dividir, (v) => mudar('dividir', v, { reconstruir: true }));
       const maxItens = LC.UI.selecao('ed-max', [[0, 'Todos'], ...[3, 4, 5, 6, 7, 8].map((n) => [n, `Os ${n} maiores`])], r.maxItens, (v) => mudar('maxItens', +v));

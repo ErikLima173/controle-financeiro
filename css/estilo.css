@@ -1373,3 +1373,16 @@ dialog::backdrop { background: var(--veu); }
 .acesso-novo .entrada { flex: 1 1 220px; min-width: 0; }
 .conta-linha { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; padding: 10px 18px 4px; }
 .conta-linha .botao-fantasma { margin-left: auto; }
+
+/* Gráfico por grupo aberto num grupo: volta para todos os grupos */
+.cg-voltar { margin: -2px 0 4px -8px; }
+
+/* Cadastros → Categorias: gastos por grupo, com grupo e "fixo" em cada categoria */
+.cadastro-grupo { display: flex; align-items: center; gap: 8px; padding: 12px 10px 4px; border-top: 1px solid var(--regua); margin-top: 4px; }
+.cadastro-lista > .cadastro-grupo:nth-child(2) { border-top: 0; margin-top: 0; }
+.cadastro-grupo .ajuda { margin-left: auto; }
+.cadastro-abaixo { grid-column: 2 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; padding-bottom: 4px; }
+.cadastro-grupo-campo { display: flex; align-items: center; gap: 6px; flex: 1 1 180px; min-width: 0; }
+.cadastro-grupo-campo .entrada { flex: 1; min-width: 0; max-width: 220px; }
+.cadastro-fixo { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--tinta-2); cursor: pointer; }
+.cadastro-fixo input { accent-color: var(--acento); width: 15px; height: 15px; margin: 0; }

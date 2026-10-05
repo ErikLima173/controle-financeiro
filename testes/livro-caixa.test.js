@@ -131,6 +131,27 @@ test('planilha mensal: a aba antiga deixa de fora os anos das abas das pessoas',
   assert.ok(!r2.pessoas.some((p) => p.nome === 'Casa'));
 });
 
+test('gráficos por grupo e por fixo ou variável', () => {
+  const est = Dd.estadoVazio();
+  const lanca = (categoria, valor) => est.lancamentos.push(Dd.normalizarLancamento({ data: '2026-09-10', descricao: categoria, categoria, tipo: 'despesa', valor, pessoa: 'vini', situacao: 'pago' }));
+  lanca('aluguel', 1100); lanca('agua', 60); lanca('comida', 300); lanca('racao-gatos', 90);
+  const f = Dd.periodo({ periodo: 'personalizado', de: '2026-09-01', ate: '2026-09-30', pessoa: 'todas', situacao: 'todas' }, HOJE, est);
+  const porGrupo = Dd.dadosGrafico({ medida: 'despesas', agrupar: 'grupo', tipo: 'rosca' }, est, f, HOJE);
+  const valor = (d, rotulo) => d.series[0].valores[d.rotulos.indexOf(rotulo)];
+  assert.equal(valor(porGrupo, 'Moradia'), 1160);
+  assert.equal(valor(porGrupo, 'Pets'), 90);
+  const fixos = Dd.dadosGrafico({ medida: 'despesas', agrupar: 'mes', dividir: 'fixo', tipo: 'colunas' }, est, f, HOJE);
+  const serie = (nome) => fixos.series.find((s) => s.nome === nome).valores.reduce((a, b) => a + b, 0);
+  assert.equal(serie('Fixos'), 1160);
+  assert.equal(serie('Variáveis'), 390);
+  // Livro-caixa antigo (sem grupos): categorias ganham grupo sugerido e os gráficos novos entram uma vez.
+  const antigo = Dd.sanear({ categorias: [{ id: 'luz', nome: 'luz', tipo: 'despesa' }], graficos: [{ id: 'g-categorias', titulo: 'x' }] });
+  assert.deepEqual([antigo.categorias[0].grupo, antigo.categorias[0].fixo], ['Moradia', true]);
+  assert.deepEqual(antigo.graficos.map((g) => g.id), ['g-categorias', 'g-grupos', 'g-fixos']);
+  const semOGrafico = Dd.sanear({ ...antigo, graficos: antigo.graficos.filter((g) => g.id !== 'g-fixos') });
+  assert.ok(!semOGrafico.graficos.some((g) => g.id === 'g-fixos'), 'gráfico excluído não volta');
+});
+
 test('saldo de hoje: digitar o valor do banco acerta o saldo inicial', () => {
   const est = Dd.estadoVazio();
   const nathy = est.pessoas.find((p) => p.id === 'nathy');

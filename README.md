@@ -42,11 +42,17 @@ No painel, o lápis de cada gráfico abre o editor, com prévia ao vivo. Dá par
 
 - o tipo: colunas, barras, linha, área, rosca ou pizza;
 - o que mostrar: gastos, recebido, restante, recebido x gasto, saldo acumulado, % guardado, orçado x gasto;
-- como agrupar: por mês, semana, dia, dia da semana, categoria, pessoa ou situação;
+- como agrupar: por mês, semana, dia, dia da semana, categoria, grupo de categorias, fixo ou variável, pessoa ou situação;
 - separar em séries (por exemplo, uma cor por pessoa) e mostrar só algumas pessoas ou categorias;
 - os valores escritos no gráfico, a linha de meta, as cores de cada série, a largura e a altura.
 
 Também tem modelos prontos, como "Gastos por pessoa", "Gastos de uma pessoa" e "% guardado por mês".
+
+**Grupos e gastos fixos.** Cada categoria de gasto fica num grupo (Moradia, Pets, Transporte, Alimentação…) e pode ser
+marcada como **gasto fixo** (conta que se repete todo mês, como aluguel e internet). As duas coisas se ajustam em
+**Cadastros → Categorias**, onde os gastos aparecem separados por grupo. No painel, o gráfico **Gastos por grupo** abre
+as categorias de um grupo quando você clica nele (e "Todos os grupos" volta), e **Fixos x variáveis** mostra, mês a mês,
+quanto foi conta fixa e quanto foi o resto. Categorias que vieram da planilha ganham um grupo sugerido pelo nome.
 Arraste um gráfico pela alça para reordenar. Cada gráfico tem uma visão em tabela e pode ser baixado em PNG.
 
 ## Excel
