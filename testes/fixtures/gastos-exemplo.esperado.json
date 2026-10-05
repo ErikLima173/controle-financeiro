@@ -1,0 +1,338 @@
+{
+  "aviso": "Valores fictícios gerados por gerar_gastos_exemplo.py; não são dados reais.",
+  "meses": [
+    {
+      "mes": "Janeiro",
+      "nathy": {
+        "gasto": 2277.64,
+        "salario": 3450.0,
+        "restante": 1172.36
+      },
+      "vini": {
+        "gasto": 1937.25,
+        "salario": 2980.0,
+        "restante": 1042.75
+      },
+      "total": {
+        "recebido": 6430.0,
+        "gasto": 4214.89,
+        "restante": 2215.11
+      }
+    },
+    {
+      "mes": "Fevereiro",
+      "nathy": {
+        "gasto": 1908.17,
+        "salario": 3450.0,
+        "restante": 1541.83
+      },
+      "vini": {
+        "gasto": 2448.55,
+        "salario": 2980.0,
+        "restante": 531.45
+      },
+      "total": {
+        "recebido": 6430.0,
+        "gasto": 4356.72,
+        "restante": 2073.28
+      }
+    },
+    {
+      "mes": "Março",
+      "nathy": {
+        "gasto": 2541.09,
+        "salario": 3450.0,
+        "restante": 908.91
+      },
+      "vini": {
+        "gasto": 2023.5,
+        "salario": 2980.0,
+        "restante": 956.5
+      },
+      "total": {
+        "recebido": 6430.0,
+        "gasto": 4564.59,
+        "restante": 1865.41
+      }
+    },
+    {
+      "mes": "Abril",
+      "nathy": {
+        "gasto": 2882.22,
+        "salario": 3450.0,
+        "restante": 567.78
+      },
+      "vini": {
+        "gasto": 2044.75,
+        "salario": 2980.0,
+        "restante": 935.25
+      },
+      "total": {
+        "recebido": 6430.0,
+        "gasto": 4926.97,
+        "restante": 1503.03
+      }
+    },
+    {
+      "mes": "Maio",
+      "nathy": {
+        "gasto": 2669.09,
+        "salario": 3450.0,
+        "restante": 780.91
+      },
+      "vini": {
+        "gasto": 2045.71,
+        "salario": 2980.0,
+        "restante": 934.29
+      },
+      "total": {
+        "recebido": 6430.0,
+        "gasto": 4714.8,
+        "restante": 1715.2
+      }
+    },
+    {
+      "mes": "Junho",
+      "nathy": {
+        "gasto": 2877.46,
+        "salario": 3450.0,
+        "restante": 572.54
+      },
+      "vini": {
+        "gasto": 2173.47,
+        "salario": 4470.0,
+        "restante": 2296.53
+      },
+      "total": {
+        "recebido": 7920.0,
+        "gasto": 5050.93,
+        "restante": 2869.07
+      }
+    },
+    {
+      "mes": "Julho",
+      "nathy": {
+        "gasto": 6343.95,
+        "salario": 3450.0,
+        "restante": -2893.95
+      },
+      "vini": {
+        "gasto": 1954.69,
+        "salario": 2980.0,
+        "restante": 1025.31
+      },
+      "total": {
+        "recebido": 6430.0,
+        "gasto": 8298.64,
+        "restante": -1868.64
+      }
+    },
+    {
+      "mes": "Agosto",
+      "nathy": {
+        "gasto": 1885.82,
+        "salario": 3450.0,
+        "restante": 1564.18
+      },
+      "vini": {
+        "gasto": 2201.51,
+        "salario": 2980.0,
+        "restante": 778.49
+      },
+      "total": {
+        "recebido": 6430.0,
+        "gasto": 4087.33,
+        "restante": 2342.67
+      }
+    },
+    {
+      "mes": "Setembro",
+      "nathy": {
+        "gasto": 2343.59,
+        "salario": 3450.0,
+        "restante": 1106.41
+      },
+      "vini": {
+        "gasto": 2021.12,
+        "salario": 2980.0,
+        "restante": 958.88
+      },
+      "total": {
+        "recebido": 6430.0,
+        "gasto": 4364.71,
+        "restante": 2065.29
+      }
+    },
+    {
+      "mes": "Outubro",
+      "nathy": {
+        "gasto": 0.0,
+        "salario": 0,
+        "restante": 0.0
+      },
+      "vini": {
+        "gasto": 0.0,
+        "salario": 0,
+        "restante": 0.0
+      },
+      "total": {
+        "recebido": 0,
+        "gasto": 0.0,
+        "restante": 0.0
+      }
+    },
+    {
+      "mes": "Novembro",
+      "nathy": {
+        "gasto": 0.0,
+        "salario": 0,
+        "restante": 0.0
+      },
+      "vini": {
+        "gasto": 0.0,
+        "salario": 0,
+        "restante": 0.0
+      },
+      "total": {
+        "recebido": 0,
+        "gasto": 0.0,
+        "restante": 0.0
+      }
+    },
+    {
+      "mes": "Dezembro",
+      "nathy": {
+        "gasto": 0.0,
+        "salario": 0,
+        "restante": 0.0
+      },
+      "vini": {
+        "gasto": 0.0,
+        "salario": 0,
+        "restante": 0.0
+      },
+      "total": {
+        "recebido": 0,
+        "gasto": 0.0,
+        "restante": 0.0
+      }
+    }
+  ],
+  "ano": {
+    "recebido": 59360.0,
+    "gasto": 44579.58,
+    "restante": 14780.42
+  },
+  "historico_2025": [
+    {
+      "mes": "março",
+      "gasto": 2333.7,
+      "recebido": 3200.0,
+      "restante": 866.3
+    },
+    {
+      "mes": "abril",
+      "gasto": 3119.57,
+      "recebido": 3200.0,
+      "restante": 80.43
+    },
+    {
+      "mes": "maio",
+      "gasto": 2871.81,
+      "recebido": 3200.0,
+      "restante": 328.19
+    },
+    {
+      "mes": "junho",
+      "gasto": 2920.26,
+      "recebido": 3200.0,
+      "restante": 279.74
+    },
+    {
+      "mes": "julho",
+      "gasto": 2360.0,
+      "recebido": 3200.0,
+      "restante": 840.0
+    },
+    {
+      "mes": "agosto",
+      "gasto": 2304.98,
+      "recebido": 3200.0,
+      "restante": 895.02
+    },
+    {
+      "mes": "setembro",
+      "gasto": 2214.8,
+      "recebido": 3200.0,
+      "restante": 985.2
+    },
+    {
+      "mes": "outubro",
+      "gasto": 2214.8,
+      "recebido": 3200.0,
+      "restante": 985.2
+    },
+    {
+      "mes": "novembro",
+      "gasto": 2214.8,
+      "recebido": 3200.0,
+      "restante": 985.2
+    },
+    {
+      "mes": "dezembro",
+      "gasto": 2034.8,
+      "recebido": 3200.0,
+      "restante": 1165.2
+    }
+  ],
+  "historico_2026": [
+    {
+      "mes": "Janeiro",
+      "gasto": 1584.8
+    },
+    {
+      "mes": "fevereiro",
+      "gasto": 1309.8
+    },
+    {
+      "mes": "março",
+      "gasto": 1309.8
+    },
+    {
+      "mes": "abril",
+      "gasto": 1309.8
+    },
+    {
+      "mes": "maio",
+      "gasto": 1309.8
+    },
+    {
+      "mes": "junho",
+      "gasto": 1309.8
+    },
+    {
+      "mes": "julho",
+      "gasto": 1309.8
+    },
+    {
+      "mes": "agosto",
+      "gasto": 1309.8
+    },
+    {
+      "mes": "setembro",
+      "gasto": 1309.8
+    },
+    {
+      "mes": "outubro",
+      "gasto": 1309.8
+    },
+    {
+      "mes": "novembro",
+      "gasto": 1309.8
+    },
+    {
+      "mes": "dezembro",
+      "gasto": 1309.8
+    }
+  ]
+}
