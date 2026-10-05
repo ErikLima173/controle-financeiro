@@ -4,7 +4,7 @@
  * Só entra em ação quando js/config-nuvem.js tem a configuração do Firebase. Sem ela, nada daqui
  * carrega e o Livro-Caixa guarda tudo no navegador, como antes.
  *
- *   Login: Firebase Authentication, e-mail e senha. A conta só abre um livro-caixa depois de confirmar o e-mail.
+ *   Login: Firebase Authentication, e-mail e senha (confirmar o e-mail é opcional: confirmarEmail na configuração).
  *   Dados: Cloud Firestore, com cópia no aparelho (abre sem internet e envia quando ela volta).
  *     livros/{id}                               { nome, emails: [...], criadoPor, criadoEm }   quem usa
  *     livros/{id}/livro/config                  pessoas, categorias e gráficos
@@ -23,6 +23,9 @@
     return c && typeof c === 'object' && c.apiKey && c.projectId ? c : null;
   }
   const configurada = () => !!config();
+  // Confirmar o e-mail antes de abrir é opcional (confirmarEmail: true na configuração e nas regras),
+  // porque o e-mail do Firebase às vezes não chega. Sem ele, feche os cadastros no Firebase depois que todos entrarem.
+  const exigeConfirmacao = () => !!(config() && config().confirmarEmail);
 
   const normalizarEmail = (s) => String(s ?? '').trim().toLowerCase();
   const emailValido = (s) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizarEmail(s));
@@ -230,7 +233,7 @@
           await ocupado(botao, criar ? 'Criando a conta…' : 'Entrando…', async () => {
             try {
               const cred = criar ? await auth.createUserWithEmailAndPassword(e, s) : await auth.signInWithEmailAndPassword(e, s);
-              if (criar) { try { await enviarConfirmacao(cred.user); } catch (x) { erroEnvio = x; } }
+              if (criar && exigeConfirmacao()) { try { await enviarConfirmacao(cred.user); } catch (x) { erroEnvio = x; } }
               resolve(cred.user);
             } catch (x) { aviso.mostrar(mensagemErro(x)); }
           });
@@ -470,7 +473,7 @@
     let u = await usuarioInicial();
     for (;;) {
       if (!u) u = await telaEntrar();
-      if (!u.emailVerified) {
+      if (exigeConfirmacao() && !u.emailVerified) {
         u = await telaConfirmar(u);
         if (!u) continue;
       }

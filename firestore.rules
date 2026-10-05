@@ -6,14 +6,16 @@ rules_version = '2';
 //   livros/{id}          quem usa: { nome, emails: [...], criadoPor, criadoEm }
 //   livros/{id}/...      o livro-caixa: configuração e um documento por mês
 //
-// Só lê e grava quem entrou com um e-mail confirmado que está na lista "emails" do livro-caixa.
+// Só lê e grava quem entrou com um e-mail que está na lista "emails" do livro-caixa.
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // Para exigir e-mail confirmado, acrescente: && request.auth.token.email_verified == true
+    // (e confirmarEmail: true em js/config-nuvem.js). Sem isso, feche a criação de contas no Firebase
+    // depois que todos da casa tiverem conta: Authentication → Configurações → Ações do usuário.
     function logado() {
       return request.auth != null
-        && request.auth.token.email is string
-        && request.auth.token.email_verified == true;
+        && request.auth.token.email is string;
     }
 
     function meuEmail() {

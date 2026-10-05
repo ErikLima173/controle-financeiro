@@ -96,9 +96,8 @@ O plano gratuito do Firebase (Spark) sobra para uma casa e não pede cartão.
 
 **Depois, no site:**
 
-- A primeira pessoa cria a conta, confirma o e-mail (chega um link; veja também o spam) e toca em
-  **Criar o livro-caixa**, escrevendo o e-mail de quem vai usar junto.
-- A outra pessoa cria a conta com esse e-mail, confirma, e o mesmo livro-caixa abre direto.
+- A primeira pessoa cria a conta e toca em **Criar o livro-caixa**, escrevendo o e-mail de quem vai usar junto.
+- A outra pessoa cria a conta com esse e-mail, e o mesmo livro-caixa abre direto.
 - **Cadastros → Quem usa este livro-caixa** mostra a lista: dá para adicionar e tirar e-mails, trocar a senha e sair.
   Quem sai da lista perde o acesso na hora.
 - Se o navegador já tinha valores de antes de ligar o login, eles vão para o livro-caixa novo.
@@ -106,9 +105,12 @@ O plano gratuito do Firebase (Spark) sobra para uma casa e não pede cartão.
 **Segurança:**
 
 - Os valores de `js/config-nuvem.js` não são senha: só dizem qual é o projeto. Quem protege os dados são as regras
-  do `firestore.rules`: só quem entrou com um e-mail **confirmado** que está na lista do livro-caixa lê ou grava.
-- Para ninguém mais conseguir criar conta: depois que todos da casa tiverem conta, Authentication → Configurações →
+  do `firestore.rules`: só quem entrou com um e-mail que está na lista do livro-caixa lê ou grava.
+- **Importante:** depois que todos da casa tiverem conta, feche a criação de contas, para ninguém mais criar uma conta
+  com um e-mail da lista: Authentication → Configurações →
   Ações do usuário (User actions) → desmarque a criação de contas (Enable create / sign-up).
+- Se o e-mail de confirmação do Firebase chegar para vocês, dá para exigir a confirmação: `confirmarEmail: true` em
+  `js/config-nuvem.js` e a linha indicada no `firestore.rules`.
 - Para só certas pessoas poderem criar um livro-caixa, troque a função `podeCriar()` no `firestore.rules` (o arquivo
   explica como) e publique as regras de novo.
 

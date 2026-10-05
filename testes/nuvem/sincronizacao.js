@@ -5,7 +5,7 @@
  *   npm install --no-save playwright && npx playwright install chromium
  *   firebase emulators:exec --project demo-livro-caixa "node testes/nuvem/sincronizacao.js"
  *
- * O que confere: cadastro e confirmação do e-mail; duas contas no mesmo livro-caixa, vendo as mudanças uma da outra
+ * O que confere: cadastro e login; duas contas no mesmo livro-caixa, vendo as mudanças uma da outra
  * na hora; quem está fora da lista (ou não confirmou o e-mail) não lê nem grava nada; sem internet o valor fica no
  * aparelho e sobe quando ela volta; tirar alguém da lista corta o acesso; sair e entrar de novo; os valores que já
  * estavam no navegador sobem para um livro-caixa novo.
@@ -57,20 +57,12 @@ function servir() {
   return new Promise((resolve) => srv.listen(0, '127.0.0.1', () => resolve(srv)));
 }
 
-async function confirmarEmail(email) {
-  const { oobCodes } = await (await fetch(`${AUTH}/emulator/v1/projects/${PROJETO}/oobCodes`)).json();
-  const codigo = oobCodes.filter((c) => c.email === email && c.requestType === 'VERIFY_EMAIL').pop();
-  if (!codigo) throw new Error(`o emulador não tem e-mail de confirmação para ${email}`);
-  await fetch(codigo.oobLink);
-}
-
 async function criarConta(page, email) {
   await page.click('.acesso .segmento:has-text("Criar conta")');
   await page.fill('#acesso-email', email);
   await page.fill('#acesso-senha', SENHA);
   await page.fill('#acesso-senha2', SENHA);
   await page.click('.acesso-form button[type="submit"]');
-  await page.waitForSelector('#acesso-titulo:has-text("Confirme o seu e-mail")');
 }
 
 async function aberto(page) {
@@ -151,19 +143,8 @@ async function temValor(page, cat, valor, timeout = 15000) {
     conferir((await A.page.textContent('.acesso-aviso')).includes('diferentes'), 'senhas diferentes: avisa');
     await A.page.fill('#acesso-senha2', SENHA);
     await A.page.click('.acesso-form button[type="submit"]');
-    await A.page.waitForSelector('#acesso-titulo:has-text("Confirme o seu e-mail")');
-    ok('conta criada: pede para confirmar o e-mail');
-    const semConfirmar = await A.page.evaluate(async () => {
-      try { await firebase.firestore().collection('livros').where('emails', 'array-contains', firebase.auth().currentUser.email).get({ source: 'server' }); return 'leu'; } catch (e) { return e.code; }
-    });
-    conferir(semConfirmar === 'permission-denied', `sem confirmar o e-mail, o banco não abre nada (${semConfirmar})`);
-    await A.page.click('button:has-text("Já confirmei")');
-    await A.page.waitForSelector('.acesso-aviso:has-text("Ainda não aparece como confirmado")');
-    ok('"Já confirmei" antes de confirmar: avisa que ainda não chegou');
-    await confirmarEmail(EMAIL('a'));
-    await A.page.click('button:has-text("Já confirmei")');
     await A.page.waitForSelector('#acesso-titulo:has-text("Abrir o livro-caixa")');
-    ok('e-mail confirmado: oferece criar o livro-caixa');
+    ok('conta criada: oferece criar o livro-caixa, sem esperar e-mail');
     await A.page.screenshot({ path: path.join(CAPTURAS, 'nuvem-sem-livro.png') });
     await A.page.fill('#acesso-outros', `${EMAIL('b')}, isto-nao-e-email`);
     await A.page.click('button:has-text("Criar o livro-caixa")');
@@ -181,8 +162,6 @@ async function temValor(page, cat, valor, timeout = 15000) {
     const largura = await B.page.evaluate(() => [document.documentElement.scrollWidth, window.innerWidth]);
     conferir(largura[0] <= largura[1], `tela de entrar no celular sem rolagem lateral (${largura[0]} ≤ ${largura[1]})`);
     await criarConta(B.page, EMAIL('b'));
-    await confirmarEmail(EMAIL('b'));
-    await B.page.click('button:has-text("Já confirmei")');
     await aberto(B.page);
     ok('B entrou e o livro-caixa abriu direto (o e-mail de B estava na lista)');
     conferir((await status(B.page)).includes('Exemplo'), 'B também vê os exemplos: ninguém gravou nada ainda');
@@ -209,8 +188,6 @@ async function temValor(page, cat, valor, timeout = 15000) {
     const C = await abrirNavegador('C', { escuro: true });
     await C.page.goto(url);
     await criarConta(C.page, EMAIL('c'));
-    await confirmarEmail(EMAIL('c'));
-    await C.page.click('button:has-text("Já confirmei")');
     await C.page.waitForSelector('#acesso-titulo:has-text("Abrir o livro-caixa")');
     ok('C (fora da lista) não encontra nenhum livro-caixa');
     await C.page.screenshot({ path: path.join(CAPTURAS, 'nuvem-sem-livro-escuro.png') });
@@ -295,8 +272,6 @@ async function temValor(page, cat, valor, timeout = 15000) {
     D.config = CONFIG_NUVEM;
     await D.page.reload();
     await criarConta(D.page, EMAIL('d'));
-    await confirmarEmail(EMAIL('d'));
-    await D.page.click('button:has-text("Já confirmei")');
     await D.page.click('button:has-text("Criar o livro-caixa")');
     await aberto(D.page);
     await D.page.waitForSelector('.aviso:has-text("foram para o livro-caixa na nuvem")').then(() => ok('livro-caixa novo: avisa que os valores do navegador subiram'), () => falhar('não avisou da subida dos valores'));
