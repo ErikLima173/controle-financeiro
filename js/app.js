@@ -234,7 +234,7 @@
       ui.de.value = app.prefs.periodo === 'personalizado' ? f.inicio : '';
       ui.ate.value = app.prefs.periodo === 'personalizado' ? f.fim : '';
       ui.intervalo.textContent = app.prefs.periodo === 'personalizado' ? '' : `${fmt.data(f.inicio)} a ${fmt.data(f.fim)}`;
-      esvaziar(ui.pessoa).append(el('option', { value: 'todas' }, 'Todas as pessoas'), est.pessoas.map((p) => el('option', { value: p.id }, p.nome)));
+      esvaziar(ui.pessoa).append(el('option', { value: 'todas' }, 'Todas as pessoas'), ...est.pessoas.map((p) => el('option', { value: p.id }, p.nome)));
       if (!est.pessoas.some((p) => p.id === app.prefs.pessoa)) app.prefs.pessoa = 'todas';
       ui.pessoa.value = app.prefs.pessoa;
       ui.situacao.value = app.prefs.situacao;
