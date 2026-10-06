@@ -1386,3 +1386,17 @@ dialog::backdrop { background: var(--veu); }
 .cadastro-grupo-campo .entrada { flex: 1; min-width: 0; max-width: 220px; }
 .cadastro-fixo { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--tinta-2); cursor: pointer; }
 .cadastro-fixo input { accent-color: var(--acento); width: 15px; height: 15px; margin: 0; }
+
+/* Painel → Contas a pagar: total de cada dia de vencimento, por pessoa */
+.por-dia-bloco { padding: 0 18px 12px; }
+.por-dia-cabeca { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; margin-bottom: 8px; }
+.por-dia-titulo { margin: 0; font-size: 13px; font-weight: 600; color: var(--tinta-2); text-transform: uppercase; letter-spacing: 0.04em; }
+.por-dia { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.por-dia-item { display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border: 1px solid var(--regua); border-radius: 10px; background: var(--superficie-2); min-width: 0; }
+.por-dia-item.atrasadas { border-color: var(--neg); }
+.por-dia-item.atrasadas .por-dia-data { color: var(--neg); }
+.por-dia-data { font-size: 12.5px; font-weight: 600; color: var(--tinta-2); text-transform: capitalize; }
+.por-dia-valor { font-size: 18px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.por-dia-meta { font-size: 12px; color: var(--apagada); }
+.por-dia-pessoas { display: flex; flex-direction: column; gap: 1px; margin-top: 4px; font-size: 12px; color: var(--tinta-2); font-variant-numeric: tabular-nums; }
+.por-dia-pessoas > span { display: flex; align-items: center; gap: 6px; white-space: nowrap; }

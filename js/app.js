@@ -503,6 +503,30 @@
         }, icone('check'), t.tipo === 'receita' ? 'Receber' : 'Pagar')));
     }
     const vazio = !corpo.children.length;
+
+    // Quanto pagar em cada dia de vencimento (as atrasadas juntas), e de quem é cada parte.
+    const porDia = new Map();
+    for (const t of [...vencidos, ...proximos].filter((x) => x.tipo === 'despesa')) {
+      const chave = t.vencido ? 'atrasadas' : t.data;
+      if (!porDia.has(chave)) porDia.set(chave, { total: 0, contas: 0, pessoas: new Map() });
+      const d = porDia.get(chave);
+      d.total += t.valor; d.contas++;
+      d.pessoas.set(t.pessoa, (d.pessoas.get(t.pessoa) || 0) + t.valor);
+    }
+    const dias = [...porDia.entries()].sort(([a], [b]) => (a === 'atrasadas' ? -1 : b === 'atrasadas' ? 1 : a.localeCompare(b)));
+    const filtroPessoa = est.pessoas.length > 1 ? LC.UI.segmentado(
+      [{ valor: 'todas', rotulo: 'Todos' }, ...est.pessoas.map((p) => ({ valor: p.id, rotulo: p.nome }))], f.pessoa,
+      (v) => { salvarPrefs({ pessoa: v }); renderParado(); }, { rotulo: 'De quem são as contas', compacto: true }) : null;
+    const resumoDias = dias.length ? el('div', { class: 'por-dia-bloco' },
+      el('div', { class: 'por-dia-cabeca' }, el('h3', { class: 'por-dia-titulo', text: 'A pagar por dia' }), filtroPessoa),
+      el('ul', { class: 'por-dia' }, dias.map(([chave, d]) => el('li', { class: 'por-dia-item' + (chave === 'atrasadas' ? ' atrasadas' : '') },
+        el('span', { class: 'por-dia-data', text: chave === 'atrasadas' ? 'Atrasadas' : `${chave.slice(8, 10)} ${fmt.mes(D.mes(chave)).split('/')[0]}${chave === hoje() ? ' · hoje' : ''}` }),
+        el('strong', { class: 'por-dia-valor', text: fmt.moeda(LC.arred(d.total)) }),
+        el('span', { class: 'por-dia-meta', text: plural(d.contas, 'conta', 'contas') }),
+        f.pessoa === 'todas' ? el('span', { class: 'por-dia-pessoas' },
+          [...d.pessoas.entries()].sort((a, b) => b[1] - a[1]).map(([pid, v]) => el('span', null,
+            el('span', { class: 'ponto', style: { background: LC.cor(pessoas.get(pid)?.cor) } }), `${pessoas.get(pid)?.nome || '?'} ${fmt.moeda(LC.arred(v))}`))) : null)))) : null;
+
     return el('section', { class: 'cartao pendencias-cartao', 'aria-labelledby': 'pend-titulo' },
       el('header', { class: 'cartao-cabeca' },
         el('div', null,
@@ -514,6 +538,7 @@
           type: 'button', class: 'botao botao-pequeno botao-fantasma',
           onclick: () => { salvarPrefs({ situacao: 'pendente', periodo: 'tudo' }); irPara('lancamentos'); },
         }, 'Ver todas', icone('chevron-dir', 'ico ico-mini'))),
+      resumoDias,
       vazio ? el('p', { class: 'pendencias-vazio' }, icone('check', 'ico'), 'Tudo em dia.') : corpo);
   }
 
