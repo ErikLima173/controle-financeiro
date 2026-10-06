@@ -106,8 +106,9 @@ async function temValor(page, cat, valor, timeout = 15000) {
 
   async function abrirNavegador(nome, { celular = false, escuro = false, configNuvem = CONFIG_NUVEM } = {}) {
     const ctx = await browser.newContext(celular
-      ? { viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true, colorScheme: escuro ? 'dark' : 'light' }
-      : { viewport: { width: 1280, height: 860 }, colorScheme: escuro ? 'dark' : 'light' });
+      ? { viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true, colorScheme: escuro ? 'dark' : 'light', serviceWorkers: 'block' }
+      : { viewport: { width: 1280, height: 860 }, colorScheme: escuro ? 'dark' : 'light', serviceWorkers: 'block' });
+    // serviceWorkers: 'block' — o sw.js do app buscaria a configuração real do Firebase por fora da troca feita aqui.
     await ctx.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort());
     const p = { nome, ctx, config: configNuvem, erros: [], offline: false };
     await ctx.route('**/js/config-nuvem.js', (r) => r.fulfill({ contentType: 'text/javascript', body: p.config }));

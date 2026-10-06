@@ -80,7 +80,7 @@ function servir() {
   const srv = await servir();
   const url = `http://127.0.0.1:${srv.address().port}/index.html`;
   const browser = await chromium.launch();
-  const ctx = await browser.newContext({ viewport: { width: 1280, height: 720 }, recordVideo: { dir: SAIDA, size: { width: 1280, height: 720 } }, colorScheme: 'light', locale: 'pt-BR' });
+  const ctx = await browser.newContext({ viewport: { width: 1280, height: 720 }, recordVideo: { dir: SAIDA, size: { width: 1280, height: 720 } }, colorScheme: 'light', locale: 'pt-BR', serviceWorkers: 'block' });
   await ctx.route('**/js/config-nuvem.js', (r) => r.fulfill({ contentType: 'text/javascript', body: CONFIG }));
   if (fs.existsSync(FONTES)) {
     await ctx.route(/fonts\.googleapis\.com/, (r) => r.fulfill({ contentType: 'text/css', body: CSS_FONTES }));
