@@ -1,0 +1,20 @@
+{
+  "name": "Livro-Caixa",
+  "short_name": "Livro-Caixa",
+  "description": "Controle financeiro da casa no formato da planilha Gastos: planilha mensal por pessoa, saldo de cada um e gráficos.",
+  "lang": "pt-BR",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f2f4f1",
+  "theme_color": "#1f5c4a",
+  "icons": [
+    { "src": "icones/icone-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icones/icone-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icones/icone-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Planilha mensal", "url": "./index.html#mensal" },
+    { "name": "Lançamentos", "url": "./index.html#lancamentos" }
+  ]
+}

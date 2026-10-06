@@ -6,6 +6,13 @@
 <title>Livro-Caixa</title>
 <meta name="description" content="Controle financeiro visual no formato da planilha Gastos: planilha mensal por pessoa, painel com gráficos editáveis, orçamento e exportação para Excel.">
 <meta name="color-scheme" content="light dark">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#1f5c4a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Livro-Caixa">
+<link rel="apple-touch-icon" href="icones/apple-touch-icon.png">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%231f5c4a'/%3E%3Cpath d='M9 9h14M9 14h14M9 19h14M9 24h9M13 6v21' stroke='%23fff' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -84,6 +91,7 @@
     </nav>
     <div class="trilho-rodape">
       <div id="status-salvamento" class="status-salvamento" role="status"></div>
+      <button type="button" id="acao-instalar" class="nav-item nav-discreto" hidden><svg class="ico" aria-hidden="true"><use href="#i-monitor"/></svg><span class="trilho-rotulo">Instalar app</span></button>
       <button type="button" id="acao-tema" class="nav-item nav-discreto" hidden></button>
     </div>
   </aside>

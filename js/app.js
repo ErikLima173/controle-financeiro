@@ -841,6 +841,7 @@
                 ? 'Seus dados ficam salvos no armazenamento deste artefato do Claude, visíveis só para você e para quem você der acesso de edição.'
                 : 'Seus dados ficam salvos neste navegador, neste computador. Baixe um backup de vez em quando e guarde em lugar seguro.' }))),
         el('div', { class: 'dados-acoes' },
+          instalado() ? null : botaoDado('monitor', 'Instalar como app', 'Ícone próprio no celular e no computador, abre em janela só dele e funciona sem internet.', instalarApp),
           botaoDado('excel', `Exportar Excel de ${anos[0]}`, 'No formato da sua planilha: uma aba "Gastos" por pessoa e a "Total finanças", com fórmulas e gráficos editáveis no Excel.', () => exportarAno(anos[0])),
           botaoDado('importar', 'Importar planilha ou extrato', 'O seu Gastos.xlsx (abas mensais), um .csv, um extrato .ofx do banco ou um backup .json.', () => abrirImportacao()),
           botaoDado('disco', 'Baixar backup', 'Arquivo .json com tudo: valores, pessoas, categorias e gráficos. Use para restaurar ou levar para outro computador.', exportarBackup),
@@ -1561,10 +1562,45 @@
     LC.UI.aviso('Backup restaurado.', { tipo: 'ok', acao: { rotulo: 'Desfazer', fn: () => alterar((e) => Object.assign(e, antes)) } });
   }
 
+  // ── App instalável (PWA) ─────────────────────────────────────────────────
+
+  let pedidoInstalar = null; // Chrome e Edge guardam aqui o pedido de instalação
+  const instalado = () => window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+  const noIphone = () => /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+  function prepararApp() {
+    const web = /^https?:$/.test(location.protocol) && !(window.claude && typeof window.claude.use === 'function');
+    if (web && 'serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => { /* sem app offline neste navegador */ });
+    const botao = $('#acao-instalar');
+    const mostrar = () => { botao.hidden = instalado() || !(pedidoInstalar || (noIphone() && web)); };
+    botao.addEventListener('click', instalarApp);
+    window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); pedidoInstalar = e; mostrar(); if (app.prefs.vista === 'cadastros') render(); });
+    window.addEventListener('appinstalled', () => { pedidoInstalar = null; mostrar(); LC.UI.aviso('Pronto: o Livro-Caixa está instalado como app.', { tipo: 'ok' }); render(); });
+    mostrar();
+  }
+
+  async function instalarApp() {
+    if (pedidoInstalar) {
+      pedidoInstalar.prompt();
+      try { await pedidoInstalar.userChoice; } catch (_) { /* fechou a janela */ }
+      pedidoInstalar = null;
+      $('#acao-instalar').hidden = true;
+      render();
+      return;
+    }
+    const passos = noIphone()
+      ? 'No Safari, toque no botão Compartilhar (o quadrado com a seta para cima) e depois em "Adicionar à Tela de Início".'
+      : /android/i.test(navigator.userAgent)
+        ? 'No Chrome, toque no menu ⋮ (canto de cima) e depois em "Instalar app" ou "Adicionar à tela inicial".'
+        : 'No Chrome ou no Edge, clique no ícone de instalar no fim da barra de endereço (um monitor com uma seta) ou no menu ⋮ → "Instalar Livro-Caixa".';
+    await LC.UI.confirmar({ titulo: 'Instalar o Livro-Caixa', texto: passos, botao: 'Entendi' });
+  }
+
   // ── Início ───────────────────────────────────────────────────────────────
 
   async function iniciar() {
     app.prefs = { ...app.prefs, ...S.lerPrefs() };
+    prepararApp();
     const vistaHash = location.hash.slice(1);
     if (VISTAS[vistaHash]) app.prefs.vista = vistaHash;
     if (!VISTAS[app.prefs.vista]) app.prefs.vista = 'painel';

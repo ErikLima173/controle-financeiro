@@ -70,6 +70,15 @@ Na importação, a opção "Substituir os valores desses meses" evita somar duas
 Também dá para exportar CSV, baixar um backup completo (.json) e baixar uma planilha modelo vazia.
 Na importação, além do formato mensal, o sistema aceita listas de lançamentos em .xlsx ou .csv e extratos .ofx do banco.
 
+## Instalar como app
+
+Pelo endereço do Vercel, o Livro-Caixa pode ser instalado como um app, com ícone próprio, janela só dele e
+funcionando sem internet. Não precisa de loja de apps, e as atualizações chegam sozinhas.
+
+- **PC (Chrome ou Edge):** clique no ícone de instalar no fim da barra de endereço, ou em **Instalar app** no menu do Livro-Caixa.
+- **Android (Chrome):** menu ⋮ → **Instalar app** (ou o aviso que aparece embaixo).
+- **iPhone (Safari):** botão **Compartilhar** → **Adicionar à Tela de Início**.
+
 ## Publicar no Vercel
 
 1. Entre em [vercel.com](https://vercel.com) com a sua conta do GitHub.
