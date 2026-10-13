@@ -473,14 +473,22 @@
     renderGraficos($('#painel-graficos', raiz), f);
   }
 
+  let filtroCategoriaPend = 'todas'; // categoria escolhida em "Contas a pagar e a receber"
+
   function renderPendencias(f) {
     const est = app.estado;
-    const lista = Dd.pendencias(est, hoje(), f.pessoa);
+    const cats = Dd.mapaPorId(est.categorias), pessoas = Dd.mapaPorId(est.pessoas);
+    const todas = Dd.pendencias(est, hoje(), f.pessoa).filter((t) => t.vencido || t.dias <= 31);
+
+    // Quanto falta pagar em cada categoria (com o filtro de pessoa já aplicado).
+    const porCategoria = new Map();
+    for (const t of todas.filter((x) => x.tipo === 'despesa')) porCategoria.set(t.categoria, (porCategoria.get(t.categoria) || 0) + t.valor);
+    if (filtroCategoriaPend !== 'todas' && !porCategoria.has(filtroCategoriaPend)) filtroCategoriaPend = 'todas';
+    const lista = filtroCategoriaPend === 'todas' ? todas : todas.filter((t) => t.categoria === filtroCategoriaPend);
     const vencidos = lista.filter((t) => t.vencido);
-    const proximos = lista.filter((t) => !t.vencido && t.dias <= 31);
+    const proximos = lista.filter((t) => !t.vencido);
     const aPagar = LC.arred([...vencidos, ...proximos].filter((t) => t.tipo === 'despesa').reduce((s, t) => s + t.valor, 0));
     const aReceber = LC.arred(proximos.filter((t) => t.tipo === 'receita').reduce((s, t) => s + t.valor, 0));
-    const cats = Dd.mapaPorId(est.categorias), pessoas = Dd.mapaPorId(est.pessoas);
     const corpo = el('ul', { class: 'pendencias' });
     for (const t of [...vencidos, ...proximos].slice(0, 6)) {
       const quando = t.vencido ? `venceu há ${plural(-t.dias, 'dia', 'dias')}` : t.dias === 0 ? 'vence hoje' : t.dias === 1 ? 'vence amanhã' : `em ${t.dias} dias`;
@@ -517,8 +525,15 @@
     const filtroPessoa = est.pessoas.length > 1 ? LC.UI.segmentado(
       [{ valor: 'todas', rotulo: 'Todos' }, ...est.pessoas.map((p) => ({ valor: p.id, rotulo: p.nome }))], f.pessoa,
       (v) => { salvarPrefs({ pessoa: v }); renderParado(); }, { rotulo: 'De quem são as contas', compacto: true }) : null;
+    const filtroCat = porCategoria.size ? el('div', { class: 'filtro' }, icone('etiqueta', 'ico ico-filtro'), LC.UI.selecao('pend-categoria',
+      [['todas', 'Todas as categorias'], ...[...porCategoria.entries()]
+        .sort((a, b) => b[1] - a[1])
+        .map(([id, v]) => [id, `${cats.get(id)?.nome || 'Sem categoria'} · ${fmt.moeda(LC.arred(v))}`])],
+      filtroCategoriaPend, (v) => { filtroCategoriaPend = v; renderParado(); },
+      { 'aria-label': 'Filtrar contas a pagar por categoria' })) : null;
     const resumoDias = dias.length ? el('div', { class: 'por-dia-bloco' },
-      el('div', { class: 'por-dia-cabeca' }, el('h3', { class: 'por-dia-titulo', text: 'A pagar por dia' }), filtroPessoa),
+      el('div', { class: 'por-dia-cabeca' }, el('h3', { class: 'por-dia-titulo', text: 'A pagar por dia' }),
+        el('div', { class: 'por-dia-filtros' }, filtroCat, filtroPessoa)),
       el('ul', { class: 'por-dia' }, dias.map(([chave, d]) => el('li', { class: 'por-dia-item' + (chave === 'atrasadas' ? ' atrasadas' : '') },
         el('span', { class: 'por-dia-data', text: chave === 'atrasadas' ? 'Atrasadas' : `${chave.slice(8, 10)} ${fmt.mes(D.mes(chave)).split('/')[0]}${chave === hoje() ? ' · hoje' : ''}` }),
         el('strong', { class: 'por-dia-valor', text: fmt.moeda(LC.arred(d.total)) }),

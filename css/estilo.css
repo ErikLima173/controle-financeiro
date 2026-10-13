@@ -1390,6 +1390,8 @@ dialog::backdrop { background: var(--veu); }
 /* Painel → Contas a pagar: total de cada dia de vencimento, por pessoa */
 .por-dia-bloco { padding: 0 18px 12px; }
 .por-dia-cabeca { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; margin-bottom: 8px; }
+.por-dia-filtros { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.por-dia-filtros .entrada { width: auto; max-width: 100%; }
 .por-dia-titulo { margin: 0; font-size: 13px; font-weight: 600; color: var(--tinta-2); text-transform: uppercase; letter-spacing: 0.04em; }
 .por-dia { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
 .por-dia-item { display: flex; flex-direction: column; gap: 2px; padding: 10px 12px; border: 1px solid var(--regua); border-radius: 10px; background: var(--superficie-2); min-width: 0; }
